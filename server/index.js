@@ -15,7 +15,7 @@ let customers = [];
 let vehicles = [];
 
 // Dummy initial data for demonstration
-users.push({ id: 1, username: 'test', password: '$2b$10$T.sP9K5d1V6Z7Y8I9J0X.uP9E5R8S7T.t.c.E.f.h.G.x.y.z.A.B.C', email: 'test@example.com' }); // Password: 'password'
+users.push({ id: 1, username: 'test', password: '$2b$10$XCBQxi8wy35wA4wcc6JAVOT.U5f4mIK4THSyky0EWDb8LrcCXgNiH0', email: 'test@example.com' }); // Password: 'password'
 drivers.push({ id: 1, name: 'Mang Banong', license: 'DRV001', phone: '09123456789', email: 'mang.banong@example.com', status: 'Active' });
 drivers.push({ id: 2, name: 'Aling Nena', license: 'DRV002', phone: '09987654321', email: 'aling.nena@example.com', status: 'Active' });
 customers.push({ id: 1, name: 'James', email: 'james@example.com', phone: '09000000001', address: '123 Main St' });
