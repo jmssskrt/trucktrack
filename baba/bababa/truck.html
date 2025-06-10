@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruckTrack - Fleet Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASfb-LFSstZrbPUIgPn1rKOqNTFF6mhhk&callback=initTrackingMap"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%; /* Ensure html and body take full height */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Styles for authentication sections */
+        .auth-section {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            width: 100%;
+            background-color: #f0f2f5;
+        }
+
+        .auth-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .auth-card input {
+            margin-bottom: 15px;
+        }
+
+        .auth-card button {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .auth-card .toggle-link {
+            margin-top: 15px;
+            cursor: pointer;
+            color: #3498db;
+            text-decoration: underline;
+        }
+
+        .sidebar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #34495e;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .nav-button.active {
+            background-color: #3498db;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn {
+            background-color: #3498db;
+            padding: 5px 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .notification {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #ffeeba;
+            position: relative;
+        }
+
+        .delete-notification {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="auth-section" class="auth-section" style="display: none;">
+        <div class="auth-card">
+            <form id="login-form">
+                <h2>Login to TruckTrack</h2>
+                <input type="text" id="loginUsername" placeholder="Username">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button type="submit">Login</button>
+                <p class="toggle-link" onclick="showRegister()">Don't have an account? Register</p>
+            </form>
+            <form id="register-form" style="display: none;">
+                <h2>Register for TruckTrack</h2>
+                <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="password" id="registerPassword" placeholder="Password" required>
+                <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required>
+                <button type="submit">Register</button>
+                <p class="toggle-link" onclick="showLogin()">Already have an account? Login</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-app" class="container">
+        <div class="sidebar">
+            <h2>TruckTrack</h2>
+            <button class="nav-button active" id="dashboardNavBtn">Dashboard</button>
+            <button class="nav-button" id="tripsNavBtn">Trip Management</button>
+            <button class="nav-button" id="expensesNavBtn">Expense Management</button>
+            <button class="nav-button" id="driversNavBtn">Driver Management</button>
+            <button class="nav-button" id="vehiclesNavBtn">Vehicle Management</button>
+            <button class="nav-button" id="customersNavBtn">Customer Management</button>
+            <button class="nav-button" id="trackingNavBtn">Trip Tracking</button>
+            <button class="nav-button" id="logoutBtn" style="margin-top: auto; background-color: #e74c3c;">Logout</button>
+        </div>
+
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section">
+                <h2>Dashboard</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Total Trips</h3>
+                        <p id="totalTrips">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Active Trips</h3>
+                        <p id="activeTrips">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Expenses</h3>
+                        <p id="totalExpenses">₱0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Drivers</h3>
+                        <p id="totalDrivers">0</p>
+                    </div>
+                </div>
+                <div class="chart-container" style="width: 400px; margin: 0 auto;">
+                    <canvas id="tripsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Trip Management Section -->
+            <div id="trips" class="section" style="display: none;">
+                <h2>Trips Management</h2>
+                <form id="tripForm">
+                    <input type="text" id="tripOrigin" placeholder="Origin" required readonly>
+                    <button type="button" id="selectOriginOnMapBtn">Select Origin on Map</button>
+                    <input type="text" id="tripDestination" placeholder="Destination" required readonly>
+                    <button type="button" id="selectDestinationOnMapBtn">Select Destination on Map</button>
+                    <input type="date" id="tripDate" placeholder="Date" required>
+                    <select id="tripDriver" required>
+                        <option value="">Select Driver</option>
+                    </select>
+                    <select id="tripCustomer" required>
+                        <option value="">Select Customer</option>
+                    </select>
+                    <select id="tripVehicle" required>
+                        <option value="">Select Vehicle</option>
+                    </select>
+                    <select id="tripStatus" required>
+                        <option value="Pending">Pending</option>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                    <input type="text" id="tripTravelTime" placeholder="Estimated Travel Time (e.g., 2h 30m)" readonly>
+                    <input type="text" id="tripETA" placeholder="Estimated Arrival Time" readonly>
+                    <button type="submit" class="btn-primary">Add Trip</button>
+                </form>
+                <table id="tripsTable">
+                    <thead>
+                        <tr>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Date</th>
+                            <th>Driver</th>
+                            <th>Customer</th>
+                            <th>Vehicle</th>
+                            <th>Status</th>
+                            <th>Travel Time</th>
+                            <th>Estimated Arrival</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Expense Management Section -->
+            <div id="expenses" class="section" style="display: none;">
+                <h2>Expense Management</h2>
+                <form id="expenseForm">
+                    <input type="text" id="expenseType" placeholder="Expense Type" required>
+                    <input type="number" id="expenseAmount" placeholder="Amount" required>
+                    <input type="date" id="expenseDate" required>
+                    <textarea id="expenseDescription" placeholder="Description"></textarea>
+                    <button type="submit" class="btn-primary">Add Expense</button>
+                </form>
+                <table id="expensesTable">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Driver Management Section -->
+            <div id="drivers" class="section" style="display: none;">
+                <h2>Driver Management</h2>
+                <form id="driverForm">
+                    <input type="text" id="driverName" placeholder="Driver Name" required>
+                    <input type="text" id="driverLicense" placeholder="License Number" required>
+                    <input type="tel" id="driverPhone" placeholder="Phone Number" required>
+                    <input type="email" id="driverEmail" placeholder="Email">
+                    <select id="driverStatus" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <button type="submit" class="btn-primary">Add Driver</button>
+                </form>
+                <table id="driversTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>License</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Vehicle Management Section -->
+            <div id="vehicles" class="section" style="display: none;">
+                <h2>Vehicle Management</h2>
+                <form id="vehicleForm">
+                    <input type="text" id="vehicleModel" placeholder="Model" required>
+                    <input type="number" id="vehicleYear" placeholder="Year" required>
+                    <input type="text" id="vehiclePlate" placeholder="Plate Number" required>
+                    <input type="date" id="vehicleLastService" placeholder="Last Service Date">
+                    <select id="vehicleStatus" required>
+                        <option value="Active">Active</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <button type="submit" class="btn-primary">Add Vehicle</button>
+                </form>
+                <table id="vehiclesTable">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Year</th>
+                            <th>Plate Number</th>
+                            <th>Last Service</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Customer Management Section -->
+            <div id="customers" class="section" style="display: none;">
+                <h2>Customer Management</h2>
+                <form id="customerForm">
+                    <input type="text" id="customerName" placeholder="Customer Name" required>
+                    <input type="email" id="customerEmail" placeholder="Email">
+                    <input type="tel" id="customerPhone" placeholder="Phone Number" required>
+                    <input type="text" id="customerAddress" placeholder="Address" required>
+                    <button type="submit" class="btn-primary">Add Customer</button>
+                </form>
+                <table id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Trip Tracking Section -->
+            <div id="tracking" class="section" style="display: none;">
+                <h2>Trip Tracking</h2>
+                <div class="tracking-container">
+                    <div class="tracking-sidebar">
+                        <div class="active-trips">
+                            <h3>Active Trips</h3>
+                            <div class="trip-list" id="activeTripsList">
+                                <!-- Active trips will be dynamically populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tracking-map">
+                        <div class="map-container">
+                            <div id="map" style="height: 400px; width: 100%;"></div>
+                        </div>
+                        <div class="map-controls">
+                            <button class="btn-primary">Refresh Location</button>
+                            <button class="btn-secondary">View All Trips</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="logoutBtn" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; padding: 10px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; display: none;">Logout</button>
+    <div id="notification-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000;"></div>
+    <script src="trucks.js"></script>
+</body>
+</html>
