@@ -138,7 +138,14 @@ app.get('/api/trips', authenticateToken, (req, res) => {
 });
 
 app.post('/api/trips', authenticateToken, (req, res) => {
-    const newTrip = { id: trips.length ? Math.max(...trips.map(t => t.id)) + 1 : 1, ...req.body };
+    // Ensure driver_id, customer_id, and vehicle_id are included if present in req.body
+    const newTrip = { 
+        id: trips.length ? Math.max(...trips.map(t => t.id)) + 1 : 1, 
+        ...req.body, 
+        driver_id: req.body.driver_id ? Number(req.body.driver_id) : undefined, // Store as number
+        customer_id: req.body.customer_id ? Number(req.body.customer_id) : undefined, // Store as number
+        vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : undefined // Store as number
+    };
     trips.push(newTrip);
     saveData(); // Save data after adding a new trip
     res.status(201).json(newTrip);
@@ -148,7 +155,14 @@ app.put('/api/trips/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     const index = trips.findIndex(t => String(t.id) === String(id));
     if (index > -1) {
-        trips[index] = { ...trips[index], ...req.body, id: Number(id) };
+        trips[index] = { 
+            ...trips[index], 
+            ...req.body, 
+            id: Number(id), 
+            driver_id: req.body.driver_id ? Number(req.body.driver_id) : trips[index].driver_id, // Update if provided
+            customer_id: req.body.customer_id ? Number(req.body.customer_id) : trips[index].customer_id, // Update if provided
+            vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : trips[index].vehicle_id // Update if provided
+        };
         saveData(); // Save data after updating a trip
         res.json(trips[index]);
     } else {
