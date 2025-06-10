@@ -14,13 +14,6 @@ let drivers = [];
 let customers = [];
 let vehicles = [];
 
-// Dummy initial data for demonstration
-users.push({ id: 1, username: 'test', password: '$2b$10$XCBQxi8wy35wA4wcc6JAVOT.U5f4mIK4THSyky0EWDb8LrcCXgNiH0', email: 'test@example.com' }); // Password: 'password'
-drivers.push({ id: 1, name: 'Mang Banong', license: 'DRV001', phone: '09123456789', email: 'mang.banong@example.com', status: 'Active' });
-drivers.push({ id: 2, name: 'Aling Nena', license: 'DRV002', phone: '09987654321', email: 'aling.nena@example.com', status: 'Active' });
-customers.push({ id: 1, name: 'James', email: 'james@example.com', phone: '09000000001', address: '123 Main St' });
-vehicles.push({ id: 1, model: 'Nissan Terra', year: 2022, plate_number: 'NPL888', last_service: '2024-01-01', status: 'Active' });
-
 // JWT Secret (Use a strong, long, and secret key in production environment variables)
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
 
