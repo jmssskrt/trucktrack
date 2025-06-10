@@ -41,10 +41,14 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.sendStatus(401); // No token
+    if (token == null) {
+        return res.status(401).json({ message: 'Authentication token required.' }); // No token
+    }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403); // Invalid token
+        if (err) {
+            return res.status(403).json({ message: 'Invalid or expired token.' }); // Invalid token
+        }
         req.user = user;
         next();
     });
