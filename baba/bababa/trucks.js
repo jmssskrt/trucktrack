@@ -12,8 +12,12 @@ let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 // Error handling function
 function handleApiError(error, message) {
     console.error(message, error);
+    if (error.response) {
+        console.error('API Error Response Status:', error.response.status);
+        error.response.text().then(text => console.error('API Error Response Body:', text));
+    }
     if (error.message.includes('Failed to fetch')) {
-        showNotification('Server is not running. Please start the server.', 'error');
+        showNotification('Server is not running or unreachable.', 'error');
     } else {
         showNotification(message + ': ' + error.message, 'error');
     }
@@ -1266,8 +1270,15 @@ async function loginUser() {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Login failed');
+            const errorText = await response.text(); // Get response as text first
+            try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.message || 'Login failed');
+            } catch (jsonError) {
+                // If parsing as JSON fails, it means the response was not JSON
+                console.error('Login failed: Response was not valid JSON. Full response:', errorText);
+                throw new Error('Login failed: Unexpected server response.');
+            }
         }
 
         const data = await response.json();
