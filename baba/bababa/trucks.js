@@ -480,7 +480,9 @@ async function updateTripsTable() {
             await updateTrip(trip.id, { date: newValue });
             updateTripsTable();
         });
-        makeEditable(row.insertCell(), trip.driver_name || 'N/A', async (newValue) => {
+        // Find and display driver name
+        const driverName = drivers.find(d => d.id === trip.driver_id)?.name || 'N/A';
+        makeEditable(row.insertCell(), driverName, async (newValue) => {
             const driver = drivers.find(d => d.name === newValue);
             if (driver) {
                 await updateTrip(trip.id, { driver_id: driver.id });
@@ -489,7 +491,9 @@ async function updateTripsTable() {
                 showNotification('Driver not found.', 'error');
             }
         });
-        makeEditable(row.insertCell(), trip.customer_name || 'N/A', async (newValue) => {
+        // Find and display customer name
+        const customerName = customers.find(c => c.id === trip.customer_id)?.name || 'N/A';
+        makeEditable(row.insertCell(), customerName, async (newValue) => {
             const customer = customers.find(c => c.name === newValue);
             if (customer) {
                 await updateTrip(trip.id, { customer_id: customer.id });
@@ -498,7 +502,9 @@ async function updateTripsTable() {
                 showNotification('Customer not found.', 'error');
             }
         });
-        makeEditable(row.insertCell(), trip.vehicle_model || 'N/A', async (newValue) => {
+        // Find and display vehicle model
+        const vehicleModel = vehicles.find(v => v.id === trip.vehicle_id)?.model || 'N/A';
+        makeEditable(row.insertCell(), vehicleModel, async (newValue) => {
             const vehicle = vehicles.find(v => v.model === newValue);
             if (vehicle) {
                 await updateTrip(trip.id, { vehicle_id: vehicle.id });
@@ -1065,6 +1071,8 @@ async function updateActiveTripsList() {
     activeTripsList.innerHTML = '';
 
     const trips = await getTrips();
+    const drivers = await getDrivers(); // Fetch drivers for lookup
+    const customers = await getCustomers(); // Fetch customers for lookup
     const activeTrips = trips.filter(trip => trip.status === 'Active' || trip.status === 'Pending');
 
     if (activeTrips.length === 0) {
@@ -1073,40 +1081,21 @@ async function updateActiveTripsList() {
     }
 
     activeTrips.forEach(trip => {
+        const driver = drivers.find(d => d.id === trip.driver_id);
+        const customer = customers.find(c => c.id === trip.customer_id);
+
         const tripDiv = document.createElement('div');
         tripDiv.className = 'trip-item';
         tripDiv.innerHTML = `
-            <h4>${trip.origin} to ${trip.destination}</h4>
-            <p>Date: ${trip.date}</p>
-            <p>Driver: ${trip.driver_name || 'N/A'}</p>
-            <p>Status: ${trip.status}</p>
-            <p>Est. Travel Time: ${trip.estimated_travel_time || 'N/A'}</p>
-            <p>Est. Arrival: ${trip.estimated_arrival_time || 'N/A'}</p>
-            <button class="btn-primary view-on-map-btn" data-trip-id="${trip.id}">View on Map</button>
+            <h3>${trip.origin} to ${trip.destination}</h3>
+            <p><strong>Date:</strong> ${trip.date}</p>
+            <p><strong>Driver:</strong> ${driver ? driver.name : 'N/A'}</p>
+            <p><strong>Status:</strong> ${trip.status}</p>
+            <p><strong>Est. Travel Time:</strong> ${trip.estimated_travel_time || 'N/A'}</p>
+            <p><strong>Est. Arrival:</strong> ${trip.estimated_arrival_time || 'N/A'}</p>
+            <button onclick="viewTripOnMap(${trip.id})">View on Map</button>
         `;
         activeTripsList.appendChild(tripDiv);
-
-        tripDiv.querySelector('.view-on-map-btn').addEventListener('click', () => {
-            if (trip.origin_lat && trip.origin_lng && trip.destination_lat && trip.destination_lng) {
-                const origin = new google.maps.LatLng(trip.origin_lat, trip.origin_lng);
-                const destination = new google.maps.LatLng(trip.destination_lat, trip.destination_lng);
-                
-                directionsService.route({
-                    origin: origin,
-                    destination: destination,
-                    travelMode: google.maps.TravelMode.DRIVING
-                }, (response, status) => {
-                    if (status === 'OK') {
-                        directionsRenderer.setDirections(response);
-                        trackingMap.setCenter(origin); // Center map on origin or fit bounds
-                    } else {
-                        showNotification('Directions request failed due to ' + status, 'error');
-                    }
-                });
-            } else {
-                showNotification('Trip coordinates not available for mapping.', 'error');
-            }
-        });
     });
 }
 
