@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5500/api';
+const API_BASE_URL = 'https://trucktrack-jl6v.onrender.com';
 
 // Google Maps related variables (Declared at the top)
 let trackingMap;
