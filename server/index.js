@@ -16,6 +16,7 @@ let trips = [];
 let drivers = [];
 let customers = [];
 let vehicles = [];
+let expenses = [];
 
 // Function to load data from file
 function loadData() {
@@ -27,6 +28,7 @@ function loadData() {
             drivers = data.drivers || [];
             customers = data.customers || [];
             vehicles = data.vehicles || [];
+            expenses = data.expenses || [];
             console.log('Data loaded from data.json');
         } else {
             console.log('data.json not found, initializing with empty data.');
@@ -40,7 +42,7 @@ function loadData() {
 // Function to save data to file
 function saveData() {
     try {
-        const data = { users, trips, drivers, customers, vehicles };
+        const data = { users, trips, drivers, customers, vehicles, expenses };
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
         console.log('Data saved to data.json');
     } catch (error) {
@@ -118,6 +120,15 @@ app.post('/api/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Server error during login.' });
     }
+});
+
+// Dashboard Stats API
+app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
+    const totalTrips = trips.length;
+    const activeTrips = trips.filter(trip => trip.status === 'Active' || trip.status === 'Pending').length;
+    const totalExpenses = expenses.reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
+    const totalDrivers = drivers.length;
+    res.json({ totalTrips, activeTrips, totalExpenses, totalDrivers });
 });
 
 // Trips API
@@ -263,6 +274,18 @@ app.delete('/api/vehicles/:id', authenticateToken, (req, res) => {
     } else {
         res.status(404).json({ message: 'Vehicle not found' });
     }
+});
+
+// Expenses API
+app.get('/api/expenses', authenticateToken, (req, res) => {
+    res.json(expenses);
+});
+
+app.post('/api/expenses', authenticateToken, (req, res) => {
+    const newExpense = { id: expenses.length ? Math.max(...expenses.map(e => e.id)) + 1 : 1, ...req.body };
+    expenses.push(newExpense);
+    saveData(); // Save data after adding a new expense
+    res.status(201).json(newExpense);
 });
 
 // Catch-all for undefined API routes (should come before static file serving and main HTML fallback)
