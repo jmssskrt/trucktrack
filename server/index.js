@@ -60,12 +60,6 @@ app.use(express.json());
 // Enable CORS for all requests (adjust as needed for security in production)
 app.use(cors());
 
-// Serve static frontend files
-// This assumes your 'baba/bababa' directory is in the same parent directory as your 'server' directory
-app.use(express.static(path.join(__dirname, '..', 'baba', 'bababa')));
-
-// --- API Endpoints ---
-
 // Middleware to protect routes (simplified for in-memory example)
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -271,7 +265,15 @@ app.delete('/api/vehicles/:id', authenticateToken, (req, res) => {
     }
 });
 
-// Catch-all to serve your main HTML file for any other frontend routes
+// Catch-all for undefined API routes (should come before static file serving and main HTML fallback)
+app.use('/api', (req, res) => {
+    res.status(404).json({ message: 'API endpoint not found.' });
+});
+
+// Serve static frontend files (should come after all API routes)
+app.use(express.static(path.join(__dirname, '..', 'baba', 'bababa')));
+
+// Catch-all to serve your main HTML file for any other frontend routes (should be last)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'baba', 'bababa', 'truck.html'));
 });
