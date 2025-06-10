@@ -60,7 +60,7 @@ function showSection(sectionId) {
 // Dashboard functions
 async function loadDashboardStats() {
     try {
-        const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -80,7 +80,7 @@ async function loadDashboardStats() {
 
 async function loadTripsChart() {
     try {
-        const response = await fetch(`${API_BASE_URL}/trips`, {
+        const response = await fetch(`${API_BASE_URL}/api/trips`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -157,7 +157,7 @@ async function loadTripsChart() {
 // Trip Management functions
 async function loadDrivers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/drivers`, {
+        const response = await fetch(`${API_BASE_URL}/api/drivers`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -183,7 +183,7 @@ async function loadDrivers() {
 
 async function loadCustomers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/customers`, {
+        const response = await fetch(`${API_BASE_URL}/api/customers`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -209,7 +209,7 @@ async function loadCustomers() {
 
 async function loadVehicles() {
     try {
-        const response = await fetch(`${API_BASE_URL}/vehicles`, {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -408,7 +408,7 @@ async function addTrip() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/trips`, {
+        const response = await fetch(`${API_BASE_URL}/api/trips`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -440,7 +440,7 @@ async function addTrip() {
 
 async function getTrips() {
     try {
-        const response = await fetch(`${API_BASE_URL}/trips`, {
+        const response = await fetch(`${API_BASE_URL}/api/trips`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -528,7 +528,7 @@ async function updateTripsTable() {
 
 async function updateTrip(id, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/trips/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -548,7 +548,7 @@ async function updateTrip(id, data) {
 async function deleteTrip(id) {
     if (!confirm('Are you sure you want to delete this trip?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/trips/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/trips/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
@@ -576,7 +576,7 @@ async function addExpense() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/expenses`, {
+        const response = await fetch(`${API_BASE_URL}/api/expenses`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -600,7 +600,7 @@ async function addExpense() {
 
 async function getExpenses() {
     try {
-        const response = await fetch(`${API_BASE_URL}/expenses`, {
+        const response = await fetch(`${API_BASE_URL}/api/expenses`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -647,7 +647,7 @@ async function updateExpensesTable() {
 
 async function updateExpense(id, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/expenses/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -667,7 +667,7 @@ async function updateExpense(id, data) {
 async function deleteExpense(id) {
     if (!confirm('Are you sure you want to delete this expense?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/expenses/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
@@ -695,7 +695,7 @@ async function addDriver() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/drivers`, {
+        const response = await fetch(`${API_BASE_URL}/api/drivers`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -720,7 +720,7 @@ async function addDriver() {
 
 async function getDrivers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/drivers`, {
+        const response = await fetch(`${API_BASE_URL}/api/drivers`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -772,7 +772,7 @@ async function updateDriversTable() {
 
 async function updateDriver(id, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/drivers/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -792,7 +792,7 @@ async function updateDriver(id, data) {
 async function deleteDriver(id) {
     if (!confirm('Are you sure you want to delete this driver?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/drivers/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
@@ -821,7 +821,7 @@ async function addVehicle() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/vehicles`, {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -846,7 +846,7 @@ async function addVehicle() {
 
 async function getVehicles() {
     try {
-        const response = await fetch(`${API_BASE_URL}/vehicles`, {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -898,7 +898,7 @@ async function updateVehiclesTable() {
 
 async function updateVehicle(id, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -918,7 +918,7 @@ async function updateVehicle(id, data) {
 async function deleteVehicle(id) {
     if (!confirm('Are you sure you want to delete this vehicle?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
@@ -946,7 +946,7 @@ async function addCustomer() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/customers`, {
+        const response = await fetch(`${API_BASE_URL}/api/customers`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -971,7 +971,7 @@ async function addCustomer() {
 
 async function getCustomers() {
     try {
-        const response = await fetch(`${API_BASE_URL}/customers`, {
+        const response = await fetch(`${API_BASE_URL}/api/customers`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if (!response.ok) {
@@ -1019,7 +1019,7 @@ async function updateCustomersTable() {
 
 async function updateCustomer(id, data) {
     try {
-        const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/customers/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1039,7 +1039,7 @@ async function updateCustomer(id, data) {
 async function deleteCustomer(id) {
     if (!confirm('Are you sure you want to delete this customer?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/customers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/customers/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
