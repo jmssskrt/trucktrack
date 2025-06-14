@@ -49,7 +49,10 @@ function showSection(sectionId) {
     document.querySelectorAll('.nav-button').forEach(button => {
         button.classList.remove('active');
     });
-    document.getElementById(`${sectionId}NavBtn`).classList.add('active');
+    const navBtn = document.getElementById(`${sectionId}NavBtn`);
+    if (navBtn) {
+        navBtn.classList.add('active');
+    }
     
     // Load section data
     if (sectionId === 'dashboard') {
@@ -72,7 +75,8 @@ function showSection(sectionId) {
         initTrackingMap();
         updateActiveTripsList();
     } else if (sectionId === 'reports') {
-        loadReports();
+        // loadReports(); // Remove or replace this line
+        // Optionally, you can call generateReport() or leave it empty
     } else if (sectionId === 'admin_management') {
         loadAdminManagement();
     }
