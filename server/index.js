@@ -145,6 +145,8 @@ app.post('/api/register', async (req, res) => {
         // Send OTP email
         await sendOTPEmail(email, otp);
 
+        console.log('OTP registration stored:', otpStore.get(username)); // DEBUG
+
         res.status(200).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
     } catch (error) {
         console.error('Registration error:', error);
@@ -185,6 +187,8 @@ app.post('/api/verify-otp', async (req, res) => {
         users.push(newUser);
         otpStore.delete(username);
         saveData();
+
+        console.log('User registered:', newUser); // DEBUG
 
         res.status(201).json({ message: 'Registration successful. Please login.' });
     } catch (error) {
@@ -557,6 +561,7 @@ app.post('/api/reports/weekly', authenticateToken, checkRole(['master_admin', 'a
 // Admin Management Endpoints
 app.get('/api/admin/users', authenticateToken, checkRole(['master_admin']), (req, res) => {
     const adminUsers = users.filter(user => user.role === 'admin' || user.role === 'master_admin');
+    console.log('Admin users returned:', adminUsers); // DEBUG
     res.json(adminUsers);
 });
 
