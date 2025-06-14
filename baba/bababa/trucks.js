@@ -1409,6 +1409,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('vehiclesNavBtn')?.addEventListener('click', () => showSection('vehicles'));
     document.getElementById('customersNavBtn')?.addEventListener('click', () => showSection('customers'));
     document.getElementById('trackingNavBtn')?.addEventListener('click', () => showSection('tracking'));
+    document.getElementById('reportsNavBtn')?.addEventListener('click', () => showSection('reports'));
+    document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('admin_management'));
 
     // Attach submit event listeners for forms
     document.getElementById('tripForm')?.addEventListener('submit', (event) => {
