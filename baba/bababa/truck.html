@@ -223,43 +223,41 @@
     </style>
 </head>
 <body>
-    <div id="auth-section" class="auth-section" style="display: none;">
-        <div class="auth-card">
-            <form id="login-form">
-                <h2>Login to TruckTrack</h2>
-                <input type="text" id="loginUsername" placeholder="Username">
-                <input type="password" id="loginPassword" placeholder="Password">
-                <button type="submit">Login</button>
-                <p class="toggle-link" onclick="showRegister()">Don't have an account? Register</p>
-            </form>
-            <form id="register-form" style="display: none;">
-                <h2>Register for TruckTrack</h2>
-                <input type="text" id="registerUsername" placeholder="Username" required>
-                <input type="email" id="registerEmail" placeholder="Email" required>
-                <input type="password" id="registerPassword" placeholder="Password" required>
-                <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required>
-                <input type="text" id="registerCompany" placeholder="Company/Organization" required>
-                <select id="registerRole" required>
-                    <option value="">Select Role</option>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                    <option value="master_admin">Master Admin</option>
-                </select>
-                <input type="text" id="registerKey" placeholder="Role Key (if admin/master admin)" style="display: none;">
-                <button type="submit">Register</button>
-                <p class="toggle-link" onclick="showLogin()">Already have an account? Login</p>
-            </form>
-
-            <form id="otp-verification-form" style="display: none;">
-                <h2>Verify OTP</h2>
-                <p>Please enter the OTP sent to your email</p>
-                <input type="text" id="otpInput" placeholder="Enter OTP" required>
-                <button type="submit">Verify OTP</button>
-            </form>
+    <div class="auth-section" id="auth">
+        <div class="auth-card" id="login-form">
+            <h2>Login to TruckTrack</h2>
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button type="submit">Login</button>
+            <p class="toggle-link" onclick="showRegister()">Don't have an account? Register</p>
         </div>
+        <form id="register-form" style="display: none;">
+            <h2>Register for TruckTrack</h2>
+            <input type="text" id="registerUsername" placeholder="Username" required>
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <input type="password" id="registerPassword" placeholder="Password" required>
+            <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required>
+            <input type="text" id="registerCompany" placeholder="Company/Organization" required>
+            <select id="registerRole" required>
+                <option value="">Select Role</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+                <option value="master_admin">Master Admin</option>
+            </select>
+            <input type="text" id="registerKey" placeholder="Role Key (if admin/master admin)" style="display: none;">
+            <button type="submit">Register</button>
+            <p class="toggle-link" onclick="showLogin()">Already have an account? Login</p>
+        </form>
+
+        <form id="otp-verification-form" style="display: none;">
+            <h2>Verify OTP</h2>
+            <p>Please enter the OTP sent to your email</p>
+            <input type="text" id="otpInput" placeholder="Enter OTP" required>
+            <button type="submit">Verify OTP</button>
+        </form>
     </div>
 
-    <div id="main-app" class="container">
+    <div class="container" id="mainContent">
         <div class="sidebar">
             <h2>TruckTrack</h2>
             <button class="nav-button active" id="dashboardNavBtn">Dashboard</button>

@@ -1350,8 +1350,16 @@ async function loginUser() {
         showNotification(data.message, 'success');
         
         // Hide auth sections and show relevant sections based on role
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
+        const authElement = document.getElementById('auth');
+        const mainContentElement = document.getElementById('mainContent');
+
+        if (authElement) {
+            authElement.style.display = 'none';
+        }
+        if (mainContentElement) {
+            mainContentElement.style.display = 'block';
+        }
+        
         updateNavigationButtons(); // Update navigation based on new role
         showSection('dashboard'); // Redirect to dashboard or a default section
 
