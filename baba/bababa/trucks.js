@@ -9,6 +9,13 @@ let directionsRenderer;
 const DEFAULT_MAP_CENTER = { lat: 14.5995, lng: 120.9842 }; // Manila coordinates
 let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 
+// Role-based access control
+const ROLE_ACCESS = {
+    master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'admin_management'],
+    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking'],
+    user: ['tracking']
+};
+
 // Error handling function
 function handleApiError(error, message) {
     console.error(message, error);
@@ -25,6 +32,12 @@ function handleApiError(error, message) {
 
 // Navigation functions
 function showSection(sectionId) {
+    const userRole = getUserRole();
+    if (!ROLE_ACCESS[userRole].includes(sectionId)) {
+        showNotification('You do not have access to this section.', 'error');
+        return;
+    }
+
     // Hide all sections
     document.querySelectorAll('.section').forEach(section => {
         section.style.display = 'none';
@@ -56,8 +69,41 @@ function showSection(sectionId) {
     } else if (sectionId === 'customers') {
         updateCustomersTable();
     } else if (sectionId === 'tracking') {
-        initTrackingMap(); // Initialize tracking map
-        updateActiveTripsList(); // Call this when tracking tab is shown
+        initTrackingMap();
+        updateActiveTripsList();
+    } else if (sectionId === 'reports') {
+        loadReports();
+    } else if (sectionId === 'admin_management') {
+        loadAdminManagement();
+    }
+}
+
+// Update navigation buttons based on role
+function updateNavigationButtons() {
+    const userRole = getUserRole();
+    const allowedSections = ROLE_ACCESS[userRole];
+    
+    document.querySelectorAll('.nav-button').forEach(button => {
+        const sectionId = button.id.replace('NavBtn', '');
+        if (!allowedSections.includes(sectionId)) {
+            button.style.display = 'none';
+        } else {
+            button.style.display = 'block';
+        }
+    });
+}
+
+// Get user role from token
+function getUserRole() {
+    const token = getToken();
+    if (!token) return null;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.role;
+    } catch (error) {
+        console.error('Error parsing token:', error);
+        return null;
     }
 }
 
@@ -1259,12 +1305,11 @@ async function loginUser() {
         });
 
         if (!response.ok) {
-            const errorText = await response.text(); // Get response as text first
+            const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
                 throw new Error(errorData.message || 'Login failed');
             } catch (jsonError) {
-                // If parsing as JSON fails, it means the response was not JSON
                 console.error('Login failed: Response was not valid JSON. Full response:', errorText);
                 throw new Error('Login failed: Unexpected server response.');
             }
@@ -1273,6 +1318,7 @@ async function loginUser() {
         const data = await response.json();
         setToken(data.token);
         hideAuth();
+        updateNavigationButtons(); // Update navigation based on role
         showSection('dashboard');
         showNotification('Login successful!', 'success');
     } catch (error) {
@@ -1284,6 +1330,9 @@ async function registerUser() {
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    const email = document.getElementById('registerEmail').value;
+    const role = document.getElementById('registerRole').value;
+    const key = document.getElementById('registerKey').value;
 
     if (password !== confirmPassword) {
         showNotification('Passwords do not match.', 'error');
@@ -1294,7 +1343,7 @@ async function registerUser() {
         const response = await fetch(`${API_BASE_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, email, role, key })
         });
 
         if (!response.ok) {
@@ -1302,13 +1351,45 @@ async function registerUser() {
             throw new Error(errorData.message || 'Registration failed');
         }
 
-        showNotification('Registration successful! Please login.', 'success');
-        showLogin(); // Go to login page after successful registration
+        // Show OTP verification form
+        document.getElementById('register-form').style.display = 'none';
+        document.getElementById('otp-verification-form').style.display = 'block';
+        showNotification('OTP sent to your email. Please verify to complete registration.', 'info');
 
     } catch (error) {
         handleApiError(error, 'Registration failed');
     }
 }
+
+// Add OTP verification function
+async function verifyOTP() {
+    const username = document.getElementById('registerUsername').value;
+    const otp = document.getElementById('otpInput').value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, otp })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'OTP verification failed');
+        }
+
+        showNotification('Registration successful! Please login.', 'success');
+        showLogin();
+    } catch (error) {
+        handleApiError(error, 'OTP verification failed');
+    }
+}
+
+// Add event listener for OTP verification form
+document.getElementById('otp-verification-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    verifyOTP();
+});
 
 // Event listeners for initial page load and tab changes
 document.addEventListener('DOMContentLoaded', () => {
@@ -1390,5 +1471,208 @@ document.addEventListener('DOMContentLoaded', () => {
         showLogoutBtn();
     } else {
         showLogin();
+    }
+});
+
+// Report Generation Functions
+async function generateReport() {
+    const reportType = document.getElementById('reportType').value;
+    const reportMonth = document.getElementById('reportMonth').value;
+    const reportWeek = document.getElementById('reportWeek').value;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/reports/${reportType}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
+                month: reportType === 'monthly' ? reportMonth : null,
+                week: reportType === 'weekly' ? reportWeek : null
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate report');
+        }
+
+        const reportData = await response.json();
+        displayReport(reportData);
+    } catch (error) {
+        handleApiError(error, 'Error generating report');
+    }
+}
+
+function displayReport(data) {
+    const summaryDiv = document.getElementById('reportSummary');
+    const chartDiv = document.getElementById('reportChart');
+    const detailsDiv = document.getElementById('reportDetails');
+
+    // Display summary
+    summaryDiv.innerHTML = `
+        <h3>Summary</h3>
+        <p>Total Trips: ${data.totalTrips}</p>
+        <p>Total Revenue: ₱${data.totalRevenue.toFixed(2)}</p>
+        <p>Total Expenses: ₱${data.totalExpenses.toFixed(2)}</p>
+        <p>Net Profit: ₱${(data.totalRevenue - data.totalExpenses).toFixed(2)}</p>
+    `;
+
+    // Create chart
+    const ctx = document.createElement('canvas');
+    chartDiv.innerHTML = '';
+    chartDiv.appendChild(ctx);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.dates,
+            datasets: [{
+                label: 'Revenue',
+                data: data.revenue,
+                backgroundColor: '#2ecc71'
+            }, {
+                label: 'Expenses',
+                data: data.expenses,
+                backgroundColor: '#e74c3c'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Display detailed breakdown
+    detailsDiv.innerHTML = `
+        <h3>Detailed Breakdown</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Trips</th>
+                    <th>Revenue</th>
+                    <th>Expenses</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.details.map(detail => `
+                    <tr>
+                        <td>${detail.date}</td>
+                        <td>${detail.trips}</td>
+                        <td>₱${detail.revenue.toFixed(2)}</td>
+                        <td>₱${detail.expenses.toFixed(2)}</td>
+                        <td>₱${(detail.revenue - detail.expenses).toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function printReport() {
+    const printWindow = window.open('', '_blank');
+    const reportContent = document.getElementById('reportContent').innerHTML;
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>TruckTrack Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f5f5f5; }
+                </style>
+            </head>
+            <body>
+                <h1>TruckTrack Report</h1>
+                ${reportContent}
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Admin Management Functions
+async function loadAdminManagement() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch admin users');
+        }
+
+        const users = await response.json();
+        const tableBody = document.getElementById('adminTableBody');
+        tableBody.innerHTML = '';
+
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>${user.role}</td>
+                <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <button onclick="removeAdmin(${user.id})" class="delete-btn">Remove</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        handleApiError(error, 'Error loading admin users');
+    }
+}
+
+async function removeAdmin(userId) {
+    if (!confirm('Are you sure you want to remove this admin?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to remove admin');
+        }
+
+        showNotification('Admin removed successfully', 'success');
+        loadAdminManagement();
+    } catch (error) {
+        handleApiError(error, 'Error removing admin');
+    }
+}
+
+function showAddAdminForm() {
+    // Show registration form with admin role pre-selected
+    document.getElementById('register-form').style.display = 'block';
+    document.getElementById('registerRole').value = 'admin';
+    document.getElementById('registerKey').style.display = 'block';
+    document.getElementById('registerKey').required = true;
+    showRegister();
+}
+
+// Add event listeners for report type change
+document.getElementById('reportType')?.addEventListener('change', function() {
+    const monthInput = document.getElementById('reportMonth');
+    const weekInput = document.getElementById('reportWeek');
+    
+    if (this.value === 'monthly') {
+        monthInput.style.display = 'block';
+        weekInput.style.display = 'none';
+    } else {
+        monthInput.style.display = 'none';
+        weekInput.style.display = 'block';
     }
 });

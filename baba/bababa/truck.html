@@ -233,10 +233,25 @@
             <form id="register-form" style="display: none;">
                 <h2>Register for TruckTrack</h2>
                 <input type="text" id="registerUsername" placeholder="Username" required>
+                <input type="email" id="registerEmail" placeholder="Email" required>
                 <input type="password" id="registerPassword" placeholder="Password" required>
                 <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" required>
+                <select id="registerRole" required>
+                    <option value="">Select Role</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                    <option value="master_admin">Master Admin</option>
+                </select>
+                <input type="text" id="registerKey" placeholder="Role Key (if admin/master admin)" style="display: none;">
                 <button type="submit">Register</button>
                 <p class="toggle-link" onclick="showLogin()">Already have an account? Login</p>
+            </form>
+
+            <form id="otp-verification-form" style="display: none;">
+                <h2>Verify OTP</h2>
+                <p>Please enter the OTP sent to your email</p>
+                <input type="text" id="otpInput" placeholder="Enter OTP" required>
+                <button type="submit">Verify OTP</button>
             </form>
         </div>
     </div>
@@ -251,6 +266,8 @@
             <button class="nav-button" id="vehiclesNavBtn">Vehicle Management</button>
             <button class="nav-button" id="customersNavBtn">Customer Management</button>
             <button class="nav-button" id="trackingNavBtn">Trip Tracking</button>
+            <button class="nav-button" id="reportsNavBtn">Reports</button>
+            <button class="nav-button" id="adminManagementNavBtn">Admin Management</button>
             <button class="nav-button" id="logoutBtn" style="margin-top: auto; background-color: #e74c3c;">Logout</button>
         </div>
 
@@ -455,6 +472,48 @@
                             <button class="btn-secondary">View All Trips</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Add Reports Section -->
+            <div id="reports" class="section" style="display: none;">
+                <h2>Reports</h2>
+                <div class="report-controls">
+                    <select id="reportType">
+                        <option value="monthly">Monthly Report</option>
+                        <option value="weekly">Weekly Report</option>
+                    </select>
+                    <input type="month" id="reportMonth" style="display: none;">
+                    <input type="week" id="reportWeek" style="display: none;">
+                    <button onclick="generateReport()">Generate Report</button>
+                    <button onclick="printReport()">Print Report</button>
+                </div>
+                <div id="reportContent">
+                    <div id="reportSummary"></div>
+                    <div id="reportChart"></div>
+                    <div id="reportDetails"></div>
+                </div>
+            </div>
+
+            <!-- Add Admin Management Section -->
+            <div id="admin_management" class="section" style="display: none;">
+                <h2>Admin Management</h2>
+                <div class="admin-controls">
+                    <button onclick="showAddAdminForm()">Add New Admin</button>
+                </div>
+                <div id="adminList">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
