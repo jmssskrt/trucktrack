@@ -12,7 +12,7 @@ let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 // Role-based access control
 const ROLE_ACCESS = {
     master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'admin_management'],
-    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'],
+    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'], // 'reports' added for admin
     user: ['tracking']
 };
 
@@ -75,8 +75,7 @@ function showSection(sectionId) {
         initTrackingMap();
         updateActiveTripsList();
     } else if (sectionId === 'reports') {
-        // loadReports(); // Remove or replace this line
-        // Optionally, you can call generateReport() or leave it empty
+        // loadReports(); // Removed or replaced. Assuming generateReport() might be called by user action.
     } else if (sectionId === 'admin_management') {
         loadAdminManagement();
     }
@@ -398,6 +397,8 @@ async function calculateETA(originLatLng, destinationLatLng, tripDate) {
         console.warn("Missing origin, destination, or trip date for ETA calculation.");
         document.getElementById('tripTravelTime').value = '';
         document.getElementById('tripETA').value = '';
+        document.getElementById('tripDistance').value = 'N/A';
+        document.getElementById('tripPrice').value = 'N/A';
         return;
     }
 
@@ -437,14 +438,25 @@ async function calculateETA(originLatLng, destinationLatLng, tripDate) {
             });
 
             document.getElementById('tripETA').value = arrivalTimeFormatted;
+
+            // Calculate Distance and Price (NEW)
+            const distanceInMeters = route.distance.value;
+            const distanceInKm = (distanceInMeters / 1000).toFixed(2);
+            const pricePerKm = 45; // Fixed rate of ₱45 per km
+            const estimatedPrice = (distanceInKm * pricePerKm).toFixed(2);
+
+            document.getElementById('tripDistance').value = `${distanceInKm} km`;
+            document.getElementById('tripPrice').value = `₱${estimatedPrice}`;
         } else {
             throw new Error('Directions request failed: ' + response.status);
         }
     } catch (error) {
-        console.error('Error calculating ETA:', error);
-        showNotification('Error calculating ETA: ' + error.message, 'error');
+        console.error('Error calculating ETA and Price:', error);
+        showNotification('Error calculating ETA and Price: ' + error.message, 'error');
         document.getElementById('tripTravelTime').value = 'N/A';
         document.getElementById('tripETA').value = 'N/A';
+        document.getElementById('tripDistance').value = 'N/A';
+        document.getElementById('tripPrice').value = 'N/A';
     }
 }
 
@@ -462,6 +474,8 @@ async function addTrip() {
     const status = document.getElementById('tripStatus')?.value;
     const estimated_travel_time = document.getElementById('tripTravelTime')?.value;
     const estimated_arrival_time = document.getElementById('tripETA')?.value;
+    const distance = document.getElementById('tripDistance')?.value;
+    const price = document.getElementById('tripPrice')?.value;
 
     if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status) {
         showNotification('Please fill all required trip fields.', 'error');
@@ -475,11 +489,11 @@ async function addTrip() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify({ 
-                origin, origin_lat, origin_lng, 
-                destination, destination_lat, destination_lng, 
+            body: JSON.stringify({
+                origin, origin_lat, origin_lng,
+                destination, destination_lat, destination_lng,
                 date, driver_id, customer_id, vehicle_id, status,
-                estimated_travel_time, estimated_arrival_time
+                estimated_travel_time, estimated_arrival_time, distance, price
             })
         });
 
@@ -492,6 +506,8 @@ async function addTrip() {
         document.getElementById('tripForm').reset();
         document.getElementById('tripTravelTime').value = ''; // Clear after submission
         document.getElementById('tripETA').value = ''; // Clear after submission
+        document.getElementById('tripDistance').value = ''; // Clear after submission
+        document.getElementById('tripPrice').value = ''; // Clear after submission
         updateTripsTable();
         updateActiveTripsList(); // Refresh active trips
     } catch (error) {
@@ -581,6 +597,14 @@ async function updateTripsTable() {
         });
         makeEditable(row.insertCell(), trip.estimated_arrival_time || 'N/A', async (newValue) => {
             await updateTrip(trip.id, { estimated_arrival_time: newValue });
+            updateTripsTable();
+        });
+        makeEditable(row.insertCell(), trip.distance || 'N/A', async (newValue) => {
+            await updateTrip(trip.id, { distance: newValue });
+            updateTripsTable();
+        });
+        makeEditable(row.insertCell(), trip.price || 'N/A', async (newValue) => {
+            await updateTrip(trip.id, { price: newValue });
             updateTripsTable();
         });
 
@@ -1150,6 +1174,8 @@ async function updateActiveTripsList() {
             <p><strong>Status:</strong> ${trip.status}</p>
             <p><strong>Est. Travel Time:</strong> ${trip.estimated_travel_time || 'N/A'}</p>
             <p><strong>Est. Arrival:</strong> ${trip.estimated_arrival_time || 'N/A'}</p>
+            <p><strong>Distance:</strong> ${trip.distance || 'N/A'}</p>
+            <p><strong>Price:</strong> ${trip.price || 'N/A'}</p>
             <button onclick="viewTripOnMap(${trip.id})">View on Map</button>
         `;
         activeTripsList.appendChild(tripDiv);
@@ -1373,7 +1399,6 @@ async function registerUser() {
     }
 }
 
-// Add OTP verification function
 async function verifyOTP() {
     const username = document.getElementById('registerUsername').value;
     const otp = document.getElementById('otpInput').value;
@@ -1397,99 +1422,22 @@ async function verifyOTP() {
     }
 }
 
-// Add event listener for OTP verification form
-document.getElementById('otp-verification-form')?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    verifyOTP();
-});
-
-// Event listeners for initial page load and tab changes
-document.addEventListener('DOMContentLoaded', () => {
-    // Attach event listeners for navigation buttons
-    document.getElementById('dashboardNavBtn')?.addEventListener('click', () => showSection('dashboard'));
-    document.getElementById('tripsNavBtn')?.addEventListener('click', () => showSection('trips'));
-    document.getElementById('expensesNavBtn')?.addEventListener('click', () => showSection('expenses'));
-    document.getElementById('driversNavBtn')?.addEventListener('click', () => showSection('drivers'));
-    document.getElementById('vehiclesNavBtn')?.addEventListener('click', () => showSection('vehicles'));
-    document.getElementById('customersNavBtn')?.addEventListener('click', () => showSection('customers'));
-    document.getElementById('trackingNavBtn')?.addEventListener('click', () => showSection('tracking'));
-    document.getElementById('reportsNavBtn')?.addEventListener('click', () => showSection('reports'));
-    document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('admin_management'));
-
-    // Attach submit event listeners for forms
-    document.getElementById('tripForm')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        addTrip();
-    });
-    document.getElementById('expenseForm')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        addExpense();
-    });
-    document.getElementById('driverForm')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        addDriver();
-    });
-    document.getElementById('vehicleForm')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        addVehicle();
-    });
-    document.getElementById('customerForm')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        addCustomer();
-    });
-
-    // Attach submit event listeners for auth forms
-    document.getElementById('login-form')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        loginUser();
-    });
-    document.getElementById('register-form')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        registerUser();
-    });
-
-    // Attach click event listener for logout button
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-
-    // Event listeners for map selection buttons
-    document.getElementById('selectOriginOnMapBtn')?.addEventListener('click', () => {
-        mapSelectionPurpose = 'origin';
-        showSection('tracking');
-        showNotification('Select origin on the map and click "Confirm Selection".', 'info');
-    });
-
-    document.getElementById('selectDestinationOnMapBtn')?.addEventListener('click', () => {
-        mapSelectionPurpose = 'destination';
-        showSection('tracking');
-        showNotification('Select destination on the map and click "Confirm Selection".', 'info');
-    });
-
-    // Event listener for tripDate change to recalculate ETA
-    document.getElementById('tripDate')?.addEventListener('change', () => {
-        const originLat = parseFloat(document.getElementById('tripOrigin')?.dataset.lat);
-        const originLng = parseFloat(document.getElementById('tripOrigin')?.dataset.lng);
-        const destinationLat = parseFloat(document.getElementById('tripDestination')?.dataset.lat);
-        const destinationLng = parseFloat(document.getElementById('tripDestination')?.dataset.lng);
-        const tripDate = document.getElementById('tripDate')?.value;
-
-        if (originLat && originLng && destinationLat && destinationLng && tripDate) {
-            const originLatLng = new google.maps.LatLng(originLat, originLng);
-            const destinationLatLng = new google.maps.LatLng(destinationLat, destinationLng);
-            calculateETA(originLatLng, destinationLatLng, tripDate);
+// Ensure the key input is shown for admin/master admin roles
+function setupRoleKeyInput() {
+    const roleSelect = document.getElementById('registerRole');
+    const keyInput = document.getElementById('registerKey');
+    if (!roleSelect || !keyInput) return;
+    roleSelect.addEventListener('change', function() {
+        if (this.value === 'admin' || this.value === 'master_admin') {
+            keyInput.style.display = 'block';
+            keyInput.required = true;
+        } else {
+            keyInput.style.display = 'none';
+            keyInput.required = false;
         }
     });
+}
 
-    // Initial section display based on authentication status
-    if (isLoggedIn()) {
-        showSection('dashboard');
-        showLogoutBtn();
-    } else {
-        showLogin();
-    }
-
-    // Ensure the key input is shown for admin/master admin roles
-    setupRoleKeyInput();
-});
 
 // Report Generation Functions
 async function generateReport() {
@@ -1595,7 +1543,7 @@ function displayReport(data) {
 function printReport() {
     const printWindow = window.open('', '_blank');
     const reportContent = document.getElementById('reportContent').innerHTML;
-    
+
     printWindow.document.write(`
         <html>
             <head>
@@ -1613,7 +1561,7 @@ function printReport() {
             </body>
         </html>
     `);
-    
+
     printWindow.document.close();
     printWindow.print();
 }
@@ -1652,7 +1600,7 @@ async function loadAdminManagement() {
 }
 
 async function removeAdmin(userId) {
-    if (!confirm('Are you sure you want to remove this admin?')) return;
+    if (!confirm('Are you sure you want to delete this admin?')) return;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
@@ -1684,7 +1632,7 @@ function showAddAdminForm() {
 document.getElementById('reportType')?.addEventListener('change', function() {
     const monthInput = document.getElementById('reportMonth');
     const weekInput = document.getElementById('reportWeek');
-    
+
     if (this.value === 'monthly') {
         monthInput.style.display = 'block';
         weekInput.style.display = 'none';
@@ -1694,18 +1642,87 @@ document.getElementById('reportType')?.addEventListener('change', function() {
     }
 });
 
-// Ensure the key input is shown for admin/master admin roles
-function setupRoleKeyInput() {
-    const roleSelect = document.getElementById('registerRole');
-    const keyInput = document.getElementById('registerKey');
-    if (!roleSelect || !keyInput) return;
-    roleSelect.addEventListener('change', function() {
-        if (this.value === 'admin' || this.value === 'master_admin') {
-            keyInput.style.display = 'block';
-            keyInput.required = true;
-        } else {
-            keyInput.style.display = 'none';
-            keyInput.required = false;
+document.addEventListener('DOMContentLoaded', () => {
+    // Attach event listeners for navigation buttons
+    document.getElementById('dashboardNavBtn')?.addEventListener('click', () => showSection('dashboard'));
+    document.getElementById('tripsNavBtn')?.addEventListener('click', () => showSection('trips'));
+    document.getElementById('expensesNavBtn')?.addEventListener('click', () => showSection('expenses'));
+    document.getElementById('driversNavBtn')?.addEventListener('click', () => showSection('drivers'));
+    document.getElementById('vehiclesNavBtn')?.addEventListener('click', () => showSection('vehicles'));
+    document.getElementById('customersNavBtn')?.addEventListener('click', () => showSection('customers'));
+    document.getElementById('trackingNavBtn')?.addEventListener('click', () => showSection('tracking'));
+    document.getElementById('reportsNavBtn')?.addEventListener('click', () => showSection('reports'));
+    document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('admin_management'));
+
+    // Attach submit event listeners for forms
+    document.getElementById('tripForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addTrip();
+    });
+    document.getElementById('expenseForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addExpense();
+    });
+    document.getElementById('driverForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addDriver();
+    });
+    document.getElementById('vehicleForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addVehicle();
+    });
+    document.getElementById('customerForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        addCustomer();
+    });
+
+    // Attach submit event listeners for auth forms
+    document.getElementById('login-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        loginUser();
+    });
+    document.getElementById('register-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        registerUser();
+    });
+
+    // Attach click event listener for logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+
+    // Event listeners for map selection buttons
+    document.getElementById('selectOriginOnMapBtn')?.addEventListener('click', () => {
+        mapSelectionPurpose = 'origin';
+        showSection('tracking');
+        showNotification('Select origin on the map and click "Confirm Selection".', 'info');
+    });
+
+    document.getElementById('selectDestinationOnMapBtn')?.addEventListener('click', () => {
+        mapSelectionPurpose = 'destination';
+        showSection('tracking');
+        showNotification('Select destination on the map and click "Confirm Selection".', 'info');
+    });
+
+    // Event listener for tripDate change to recalculate ETA
+    document.getElementById('tripDate')?.addEventListener('change', () => {
+        const originLat = parseFloat(document.getElementById('tripOrigin')?.dataset.lat);
+        const originLng = parseFloat(document.getElementById('tripOrigin')?.dataset.lng);
+        const destinationLat = parseFloat(document.getElementById('tripDestination')?.dataset.lat);
+        const destinationLng = parseFloat(document.getElementById('tripDestination')?.dataset.lng);
+        const tripDate = document.getElementById('tripDate')?.value;
+
+        if (originLat && originLng && destinationLat && destinationLng && tripDate) {
+            const originLatLng = new google.maps.LatLng(originLat, originLng);
+            const destinationLatLng = new google.maps.LatLng(destinationLat, destinationLng);
+            calculateETA(originLatLng, destinationLatLng, tripDate);
         }
     });
-}
+
+    // Initial section display based on authentication status
+    if (isLoggedIn()) {
+        showSection('dashboard');
+        showLogoutBtn();
+    } else {
+        showLogin();
+    }
+    setupRoleKeyInput(); // Ensure the key input is shown for admin/master admin roles on DOMContentLoaded
+});

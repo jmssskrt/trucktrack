@@ -255,58 +255,141 @@ app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
 
 // Trips API
 app.get('/api/trips', authenticateToken, (req, res) => {
-    // In a real app, filter by user/driver if applicable
-    res.json(trips);
+    // Admins and Master Admins see all trips. Users only see their company's trips.
+    const userRole = req.user.role;
+    if (userRole === 'user') {
+        // For regular users, filter trips by their company_id (driver_id matches their user ID)
+        // This assumes a driver's ID is the user's ID. Adjust if driver_id is separate.
+        const userTrips = trips.filter(trip => {
+            const driver = drivers.find(d => d.id === trip.driver_id);
+            return driver && driver.user_id === req.user.id; // Assuming drivers have a user_id linked to the user table
+        });
+        return res.json(userTrips);
+    } else if (userRole === 'admin') {
+        // Admins see trips related to their company (company_id in trip matches user's company_id)
+        const adminTrips = trips.filter(trip => {
+            const userCompanyId = users.find(u => u.id === req.user.id)?.company;
+            const driverCompanyId = drivers.find(d => d.id === trip.driver_id)?.company;
+            //console.log(`Trip driver company: ${driverCompanyId}, Admin company: ${userCompanyId}`);
+            return driverCompanyId === userCompanyId;
+        });
+        return res.json(adminTrips);
+    } else {
+        // Master Admin sees all trips
+        return res.json(trips);
+    }
 });
 
-app.post('/api/trips', authenticateToken, (req, res) => {
-    const user = req.user;
-    const trip = req.body;
-    trip.company = user.company;
-    // Ensure driver_id, customer_id, and vehicle_id are included if present in req.body
-    const newTrip = { 
-        id: trips.length ? Math.max(...trips.map(t => t.id)) + 1 : 1, 
-        ...trip, 
-        driver_id: req.body.driver_id ? Number(req.body.driver_id) : undefined, // Store as number
-        customer_id: req.body.customer_id ? Number(req.body.customer_id) : undefined, // Store as number
-        vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : undefined, // Store as number
-        company: user.company
+app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
+    const { 
+        origin, origin_lat, origin_lng,
+        destination, destination_lat, destination_lng,
+        date, driver_id, customer_id, vehicle_id, status,
+        estimated_travel_time, estimated_arrival_time, distance, price // Add distance and price
+    } = req.body;
+
+    // Basic validation
+    if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status) {
+        return res.status(400).json({ message: 'Please provide all required trip details.' });
+    }
+
+    const newTrip = {
+        id: trips.length ? Math.max(...trips.map(t => t.id)) + 1 : 1,
+        company_id: req.user.role === 'master_admin' ? null : req.user.id, // Master admin trips are not tied to a specific company_id
+        origin, origin_lat: parseFloat(origin_lat), origin_lng: parseFloat(origin_lng),
+        destination, destination_lat: parseFloat(destination_lat), destination_lng: parseFloat(destination_lng),
+        date,
+        driver_id: parseInt(driver_id),
+        customer_id: parseInt(customer_id),
+        vehicle_id: parseInt(vehicle_id),
+        status,
+        estimated_travel_time: estimated_travel_time || 'N/A',
+        estimated_arrival_time: estimated_arrival_time || 'N/A',
+        distance: distance || 'N/A', // Store distance
+        price: price || 'N/A' // Store price
     };
+
     trips.push(newTrip);
-    saveData(); // Save data after adding a new trip
+    saveData();
     res.status(201).json(newTrip);
 });
 
-app.put('/api/trips/:id', authenticateToken, (req, res) => {
-    const { id } = req.params;
-    const index = trips.findIndex(t => String(t.id) === String(id));
-    if (index > -1) {
-        trips[index] = { 
-            ...trips[index], 
-            ...req.body, 
-            id: Number(id), 
-            driver_id: req.body.driver_id ? Number(req.body.driver_id) : trips[index].driver_id, // Update if provided
-            customer_id: req.body.customer_id ? Number(req.body.customer_id) : trips[index].customer_id, // Update if provided
-            vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : trips[index].vehicle_id, // Update if provided
-            company: req.body.company || trips[index].company
-        };
-        saveData(); // Save data after updating a trip
-        res.json(trips[index]);
-    } else {
-        res.status(404).json({ message: 'Trip not found' });
+app.put('/api/trips/:id', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
+    const tripId = parseInt(req.params.id);
+    const tripIndex = trips.findIndex(t => t.id === tripId);
+
+    if (tripIndex === -1) {
+        return res.status(404).json({ message: 'Trip not found' });
     }
+
+    // Only allow master_admin to edit master_admin's trips (company_id: null)
+    // Only allow admin to edit trips within their company
+    const targetTrip = trips[tripIndex];
+    const userRole = req.user.role;
+    const userCompany = users.find(u => u.id === req.user.id)?.company;
+    const tripDriverCompany = drivers.find(d => d.id === targetTrip.driver_id)?.company;
+
+    if (userRole === 'admin' && tripDriverCompany !== userCompany) {
+        return res.status(403).json({ message: 'Unauthorized to update this trip.' });
+    }
+    if (userRole !== 'master_admin' && targetTrip.company_id === null) {
+        return res.status(403).json({ message: 'Unauthorized to update master admin trips.' });
+    }
+
+    // Update only allowed fields
+    const { 
+        origin, origin_lat, origin_lng,
+        destination, destination_lat, destination_lng,
+        date, driver_id, customer_id, vehicle_id, status,
+        estimated_travel_time, estimated_arrival_time, distance, price // Add distance and price
+    } = req.body;
+
+    // Only update if the field is provided in the request body
+    if (origin !== undefined) trips[tripIndex].origin = origin;
+    if (origin_lat !== undefined) trips[tripIndex].origin_lat = parseFloat(origin_lat);
+    if (origin_lng !== undefined) trips[tripIndex].origin_lng = parseFloat(origin_lng);
+    if (destination !== undefined) trips[tripIndex].destination = destination;
+    if (destination_lat !== undefined) trips[tripIndex].destination_lat = parseFloat(destination_lat);
+    if (destination_lng !== undefined) trips[tripIndex].destination_lng = parseFloat(destination_lng);
+    if (date !== undefined) trips[tripIndex].date = date;
+    if (driver_id !== undefined) trips[tripIndex].driver_id = parseInt(driver_id);
+    if (customer_id !== undefined) trips[tripIndex].customer_id = parseInt(customer_id);
+    if (vehicle_id !== undefined) trips[tripIndex].vehicle_id = parseInt(vehicle_id);
+    if (status !== undefined) trips[tripIndex].status = status;
+    if (estimated_travel_time !== undefined) trips[tripIndex].estimated_travel_time = estimated_travel_time;
+    if (estimated_arrival_time !== undefined) trips[tripIndex].estimated_arrival_time = estimated_arrival_time;
+    if (distance !== undefined) trips[tripIndex].distance = distance; // Update distance
+    if (price !== undefined) trips[tripIndex].price = price; // Update price
+
+    saveData();
+    res.json(trips[tripIndex]);
 });
 
-app.delete('/api/trips/:id', authenticateToken, (req, res) => {
-    const { id } = req.params;
-    const initialLength = trips.length;
-    trips = trips.filter(t => String(t.id) !== String(id));
-    if (trips.length < initialLength) {
-        saveData(); // Save data after deleting a trip
-        res.status(204).send(); // No Content
-    } else {
-        res.status(404).json({ message: 'Trip not found' });
+app.delete('/api/trips/:id', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
+    const tripId = parseInt(req.params.id);
+    const tripIndex = trips.findIndex(t => t.id === tripId);
+
+    if (tripIndex === -1) {
+        return res.status(404).json({ message: 'Trip not found' });
     }
+
+    // Only allow master_admin to delete master_admin's trips (company_id: null)
+    // Only allow admin to delete trips within their company
+    const targetTrip = trips[tripIndex];
+    const userRole = req.user.role;
+    const userCompany = users.find(u => u.id === req.user.id)?.company;
+    const tripDriverCompany = drivers.find(d => d.id === targetTrip.driver_id)?.company;
+
+    if (userRole === 'admin' && tripDriverCompany !== userCompany) {
+        return res.status(403).json({ message: 'Unauthorized to delete this trip.' });
+    }
+    if (userRole !== 'master_admin' && targetTrip.company_id === null) {
+        return res.status(403).json({ message: 'Unauthorized to delete master admin trips.' });
+    }
+
+    trips.splice(tripIndex, 1);
+    saveData();
+    res.status(204).send(); // No Content
 });
 
 // Drivers API
