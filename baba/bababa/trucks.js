@@ -12,7 +12,7 @@ let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 // Role-based access control
 const ROLE_ACCESS = {
     master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'admin_management'],
-    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking'],
+    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'],
     user: ['tracking']
 };
 
