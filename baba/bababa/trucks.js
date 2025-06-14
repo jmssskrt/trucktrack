@@ -1322,44 +1322,42 @@ function makeEditable(cell, initialValue, onSave, isSelect = false, options = []
 }
 
 async function loginUser() {
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-
-    if (!username) {
-        showNotification('Please enter your username.', 'error');
-        return;
-    }
-    if (!password) {
-        showNotification('Please enter your password.', 'error');
-        return;
-    }
+    const usernameInput = document.getElementById('loginUsername').value;
+    const passwordInput = document.getElementById('loginPassword').value;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             try {
                 const errorData = JSON.parse(errorText);
-                throw new Error(errorData.message || 'Login failed');
-            } catch (jsonError) {
-                console.error('Login failed: Response was not valid JSON. Full response:', errorText);
-                throw new Error('Login failed: Unexpected server response.');
+                throw new Error(errorData.message || 'Login failed: Unexpected server response.');
+            } catch (e) {
+                // If it's not JSON, or parsing fails, just throw the text
+                throw new Error(errorText || 'Login failed: Unexpected server response.');
             }
         }
 
         const data = await response.json();
         setToken(data.token);
-        hideAuth();
-        updateNavigationButtons(); // Update navigation based on role
-        showSection('dashboard');
-        showNotification('Login successful!', 'success');
+        showNotification(data.message, 'success');
+        
+        // Hide auth sections and show relevant sections based on role
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        updateNavigationButtons(); // Update navigation based on new role
+        showSection('dashboard'); // Redirect to dashboard or a default section
+
     } catch (error) {
-        handleApiError(error, 'Login failed');
+        console.error('Login failed:', error);
+        showNotification(error.message || 'Login failed. Please try again.', 'error');
     }
 }
 
