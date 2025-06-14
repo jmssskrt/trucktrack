@@ -88,6 +88,10 @@ function updateNavigationButtons() {
         // Always show the logout button
         if (button.id === 'logoutBtn') {
             button.style.display = 'block';
+        } else if (button.id === 'reportsNavBtn' && (userRole === 'admin' || userRole === 'master_admin')) {
+            button.style.display = 'block';
+        } else if (button.id === 'adminManagementNavBtn' && userRole !== 'master_admin') {
+            button.style.display = 'none';
         } else if (!allowedSections.includes(sectionId)) {
             button.style.display = 'none';
         } else {
@@ -1334,6 +1338,7 @@ async function registerUser() {
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const email = document.getElementById('registerEmail').value;
+    const company = document.getElementById('registerCompany').value;
     const role = document.getElementById('registerRole').value;
     const key = document.getElementById('registerKey').value;
 
@@ -1346,7 +1351,7 @@ async function registerUser() {
         const response = await fetch(`${API_BASE_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, email, role, key })
+            body: JSON.stringify({ username, password, email, company, role, key })
         });
 
         if (!response.ok) {

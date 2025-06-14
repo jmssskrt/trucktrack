@@ -114,7 +114,7 @@ function authenticateToken(req, res, next) {
 
 // Register Endpoint
 app.post('/api/register', async (req, res) => {
-    const { username, password, email, role, key } = req.body;
+    const { username, password, email, role, key, company } = req.body;
 
     if (users.find(u => u.username === username)) {
         return res.status(409).json({ message: 'Username already exists' });
@@ -138,6 +138,7 @@ app.post('/api/register', async (req, res) => {
             role,
             hashedPassword,
             email,
+            company,
             timestamp: Date.now()
         });
 
@@ -177,6 +178,7 @@ app.post('/api/verify-otp', async (req, res) => {
             password: storedData.hashedPassword,
             email: storedData.email,
             role: storedData.role,
+            company: storedData.company,
             createdAt: new Date().toISOString()
         };
 
@@ -254,13 +256,17 @@ app.get('/api/trips', authenticateToken, (req, res) => {
 });
 
 app.post('/api/trips', authenticateToken, (req, res) => {
+    const user = req.user;
+    const trip = req.body;
+    trip.company = user.company;
     // Ensure driver_id, customer_id, and vehicle_id are included if present in req.body
     const newTrip = { 
         id: trips.length ? Math.max(...trips.map(t => t.id)) + 1 : 1, 
-        ...req.body, 
+        ...trip, 
         driver_id: req.body.driver_id ? Number(req.body.driver_id) : undefined, // Store as number
         customer_id: req.body.customer_id ? Number(req.body.customer_id) : undefined, // Store as number
-        vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : undefined // Store as number
+        vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : undefined, // Store as number
+        company: user.company
     };
     trips.push(newTrip);
     saveData(); // Save data after adding a new trip
@@ -277,7 +283,8 @@ app.put('/api/trips/:id', authenticateToken, (req, res) => {
             id: Number(id), 
             driver_id: req.body.driver_id ? Number(req.body.driver_id) : trips[index].driver_id, // Update if provided
             customer_id: req.body.customer_id ? Number(req.body.customer_id) : trips[index].customer_id, // Update if provided
-            vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : trips[index].vehicle_id // Update if provided
+            vehicle_id: req.body.vehicle_id ? Number(req.body.vehicle_id) : trips[index].vehicle_id, // Update if provided
+            company: req.body.company || trips[index].company
         };
         saveData(); // Save data after updating a trip
         res.json(trips[index]);
@@ -421,12 +428,17 @@ app.post('/api/expenses', authenticateToken, (req, res) => {
 // Report Generation Endpoints
 app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', 'admin']), async (req, res) => {
     const { month } = req.body;
+    let company = req.user.company;
+    let filteredTrips = trips;
+    if (req.user.role === 'admin') {
+        filteredTrips = trips.filter(trip => trip.company === company);
+    }
     try {
         const [year, monthNum] = month.split('-');
         const startDate = new Date(year, monthNum - 1, 1);
         const endDate = new Date(year, monthNum, 0);
 
-        const monthlyTrips = trips.filter(trip => {
+        const monthlyTrips = filteredTrips.filter(trip => {
             const tripDate = new Date(trip.date);
             return tripDate >= startDate && tripDate <= endDate;
         });
@@ -563,6 +575,12 @@ app.delete('/api/admin/users/:id', authenticateToken, checkRole(['master_admin']
 
     users.splice(userIndex, 1);
     saveData();
+    // On removal, set their trips' driver/admin to 'unassigned' or null
+    trips.forEach(trip => {
+        if (trip.driver_id === userId) {
+            trip.driver_id = null;
+        }
+    });
     res.json({ message: 'Admin removed successfully' });
 });
 
