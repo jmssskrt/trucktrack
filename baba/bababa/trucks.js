@@ -1475,6 +1475,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showLogin();
     }
+
+    // Ensure the key input is shown for admin/master admin roles
+    setupRoleKeyInput();
 });
 
 // Report Generation Functions
@@ -1679,3 +1682,19 @@ document.getElementById('reportType')?.addEventListener('change', function() {
         weekInput.style.display = 'block';
     }
 });
+
+// Ensure the key input is shown for admin/master admin roles
+function setupRoleKeyInput() {
+    const roleSelect = document.getElementById('registerRole');
+    const keyInput = document.getElementById('registerKey');
+    if (!roleSelect || !keyInput) return;
+    roleSelect.addEventListener('change', function() {
+        if (this.value === 'admin' || this.value === 'master_admin') {
+            keyInput.style.display = 'block';
+            keyInput.required = true;
+        } else {
+            keyInput.style.display = 'none';
+            keyInput.required = false;
+        }
+    });
+}
