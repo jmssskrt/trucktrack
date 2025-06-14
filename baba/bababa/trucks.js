@@ -1191,24 +1191,33 @@ function logout() {
 }
 
 function showLogin() {
-    document.getElementById('auth-section').style.display = 'block';
+    document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
-    document.getElementById('main-app').style.display = 'none';
+    const mainContentElement = document.getElementById('mainContent');
+    if (mainContentElement) {
+        mainContentElement.style.display = 'none';
+    }
     hideLogoutBtn();
 }
 
 function showRegister() {
-    document.getElementById('auth-section').style.display = 'block';
+    document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
-    document.getElementById('main-app').style.display = 'none';
+    const mainContentElement = document.getElementById('mainContent');
+    if (mainContentElement) {
+        mainContentElement.style.display = 'none';
+    }
     hideLogoutBtn();
 }
 
 function hideAuth() {
-    document.getElementById('auth-section').style.display = 'none';
-    document.getElementById('main-app').style.display = 'grid'; // Assuming main-app uses grid
+    document.getElementById('auth').style.display = 'none';
+    const mainContentElement = document.getElementById('mainContent');
+    if (mainContentElement) {
+        mainContentElement.style.display = 'grid'; // Assuming main-app uses grid
+    }
     showLogoutBtn();
 }
 
