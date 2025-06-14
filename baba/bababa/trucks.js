@@ -1641,7 +1641,7 @@ async function loadAdminManagement() {
                 <td>${user.role}</td>
                 <td>${new Date(user.createdAt).toLocaleDateString()}</td>
                 <td>
-                    <button onclick="removeAdmin(${user.id})" class="delete-btn">Remove</button>
+                    <button onclick="removeAdmin(${user.id})" class="delete-btn"><i class='fa fa-trash'></i> Remove</button>
                 </td>
             `;
             tableBody.appendChild(row);
