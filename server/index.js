@@ -130,24 +130,23 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const otp = generateOTP();
         
-        // Store OTP temporarily
-        otpStore.set(username, {
-            otp,
-            role,
-            hashedPassword,
+        const newUser = {
+            id: users.length ? Math.max(...users.map(u => u.id)) + 1 : 1,
+            username,
+            password: hashedPassword,
             email,
+            role,
             company,
-            timestamp: Date.now()
-        });
+            createdAt: new Date().toISOString()
+        };
 
-        // Send OTP email
-        await sendOTPEmail(email, otp);
+        users.push(newUser);
+        saveData();
 
-        console.log('OTP registration stored:', otpStore.get(username)); // DEBUG
+        console.log('User registered:', newUser); // DEBUG
 
-        res.status(200).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
+        res.status(201).json({ message: 'Registration successful. Please login.' });
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ message: 'Server error during registration.' });
@@ -156,45 +155,8 @@ app.post('/api/register', async (req, res) => {
 
 // OTP Verification Endpoint
 app.post('/api/verify-otp', async (req, res) => {
-    const { username, otp } = req.body;
-    const storedData = otpStore.get(username);
-
-    if (!storedData) {
-        return res.status(400).json({ message: 'No pending registration found' });
-    }
-
-    // Check if OTP is expired (10 minutes)
-    if (Date.now() - storedData.timestamp > 10 * 60 * 1000) {
-        otpStore.delete(username);
-        return res.status(400).json({ message: 'OTP expired' });
-    }
-
-    if (storedData.otp !== otp) {
-        return res.status(400).json({ message: 'Invalid OTP' });
-    }
-
-    try {
-        const newUser = {
-            id: users.length ? Math.max(...users.map(u => u.id)) + 1 : 1,
-            username,
-            password: storedData.hashedPassword,
-            email: storedData.email,
-            role: storedData.role,
-            company: storedData.company,
-            createdAt: new Date().toISOString()
-        };
-
-        users.push(newUser);
-        otpStore.delete(username);
-        saveData();
-
-        console.log('User registered:', newUser); // DEBUG
-
-        res.status(201).json({ message: 'Registration successful. Please login.' });
-    } catch (error) {
-        console.error('OTP verification error:', error);
-        res.status(500).json({ message: 'Server error during verification.' });
-    }
+    // This endpoint is now deprecated as registration no longer uses OTP.
+    return res.status(404).json({ message: 'Not Found: OTP verification is no longer required for registration.' });
 });
 
 // Login Endpoint

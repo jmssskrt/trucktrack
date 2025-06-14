@@ -489,9 +489,9 @@ async function addTrip() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getToken()}`
             },
-            body: JSON.stringify({
-                origin, origin_lat, origin_lng,
-                destination, destination_lat, destination_lng,
+            body: JSON.stringify({ 
+                origin, origin_lat, origin_lng, 
+                destination, destination_lat, destination_lng, 
                 date, driver_id, customer_id, vehicle_id, status,
                 estimated_travel_time, estimated_arrival_time, distance, price
             })
@@ -1387,36 +1387,11 @@ async function registerUser() {
             throw new Error(errorData.message || 'Registration failed');
         }
 
-        // Show OTP verification form
-        document.getElementById('register-form').style.display = 'none';
-        document.getElementById('otp-verification-form').style.display = 'block';
-        showNotification('OTP sent to your email. Please verify to complete registration.', 'info');
+        showNotification('Registration successful! Please login.', 'success');
+        showLogin(); // Go back to login form
 
     } catch (error) {
         handleApiError(error, 'Registration failed');
-    }
-}
-
-async function verifyOTP() {
-    const username = document.getElementById('registerUsername').value;
-    const otp = document.getElementById('otpInput').value;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/verify-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, otp })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'OTP verification failed');
-        }
-
-        showNotification('Registration successful! Please login.', 'success');
-        showLogin();
-    } catch (error) {
-        handleApiError(error, 'OTP verification failed');
     }
 }
 
