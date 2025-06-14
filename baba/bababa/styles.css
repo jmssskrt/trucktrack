@@ -116,8 +116,9 @@ body {
 
 .nav-button.active {
     background: #eaf6fb;
-    color: #3498db;
+    color: #222;
     border-left: 4px solid #3498db;
+    font-weight: 600;
 }
 
 /* Main Content Styles */
