@@ -85,7 +85,10 @@ function updateNavigationButtons() {
     
     document.querySelectorAll('.nav-button').forEach(button => {
         const sectionId = button.id.replace('NavBtn', '');
-        if (!allowedSections.includes(sectionId)) {
+        // Always show the logout button
+        if (button.id === 'logoutBtn') {
+            button.style.display = 'block';
+        } else if (!allowedSections.includes(sectionId)) {
             button.style.display = 'none';
         } else {
             button.style.display = 'block';
