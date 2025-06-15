@@ -1193,7 +1193,7 @@ function logout() {
 }
 
 function showLogin() {
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1205,7 +1205,7 @@ function showLogin() {
 }
 
 function showRegister() {
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1217,7 +1217,7 @@ function showRegister() {
 }
 
 function showOtpVerification(email) {
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'block';
@@ -1383,7 +1383,7 @@ async function loginUser() {
             authElement.style.display = 'none';
         }
         if (mainContentElement) {
-            mainContentElement.style.display = 'block';
+            mainContentElement.style.display = 'grid'; // Ensure it uses grid layout
         }
         
         updateNavigationButtons(); // Update navigation based on new role

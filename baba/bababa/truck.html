@@ -11,13 +11,7 @@
     <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
     <style>
         /* Styles for authentication sections */
-        .auth-section {
-            display: grid;
-            place-items: center;
-            min-height: 100vh;
-            width: 100%;
-            background-color: #f0f2f5;
-        }
+        /* Removed .auth-section styles */
 
         .auth-card {
             background-color: white;
@@ -212,7 +206,7 @@
     </style>
 </head>
 <body>
-    <div class="auth-section" id="auth">
+    <div class="auth-overlay" id="auth" style="display: none;">
         <form id="login-form" class="auth-card">
             <h2>Login to TruckTrack</h2>
             <input type="text" id="loginUsername" placeholder="Username">
@@ -515,6 +509,5 @@
     <button id="logoutBtn" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; padding: 10px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; display: none;">Logout</button>
     <div id="notification-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000;"></div>
     <script src="trucks.js"></script>
-    <script src="auth.js"></script>
 </body>
 </html>
