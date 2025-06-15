@@ -138,15 +138,28 @@ app.post('/api/register', async (req, res) => {
             email,
             role,
             company,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            verified: false // New user is initially unverified
         };
 
+        // Add user to the main users array, but they are unverified
         users.push(newUser);
-        saveData();
+        saveData(); // Save the unverified user
 
-        console.log('User registered:', newUser); // DEBUG
+        // Generate and send OTP
+        const otp = generateOTP();
+        const expiresAt = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
+        otpStore.set(newUser.email, { otp, expiresAt, userId: newUser.id }); // Store OTP with user's email and ID
 
-        res.status(201).json({ message: 'Registration successful. Please login.' });
+        await sendOTPEmail(email, otp);
+
+        console.log('User registered (unverified), OTP sent:', newUser); // DEBUG
+
+        res.status(202).json({ 
+            message: 'Registration successful! Please verify your email with the OTP sent to your email address.', 
+            email: newUser.email, // Send email to frontend for OTP form
+            requiresOtpVerification: true
+        });
     } catch (error) {
         console.error('Registration error:', error);
         res.status(500).json({ message: 'Server error during registration.' });
@@ -155,8 +168,33 @@ app.post('/api/register', async (req, res) => {
 
 // OTP Verification Endpoint
 app.post('/api/verify-otp', async (req, res) => {
-    // This endpoint is now deprecated as registration no longer uses OTP.
-    return res.status(404).json({ message: 'Not Found: OTP verification is no longer required for registration.' });
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        return res.status(400).json({ message: 'Email and OTP are required.' });
+    }
+
+    const storedOtpData = otpStore.get(email);
+
+    if (!storedOtpData) {
+        return res.status(400).json({ message: 'Invalid or expired OTP. Please try registering again.' });
+    }
+
+    // Check if OTP matches and is not expired
+    if (storedOtpData.otp === otp && Date.now() < storedOtpData.expiresAt) {
+        const userIndex = users.findIndex(u => u.id === storedOtpData.userId);
+
+        if (userIndex !== -1) {
+            users[userIndex].verified = true; // Mark user as verified
+            saveData();
+            otpStore.delete(email); // Remove OTP from store
+            return res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
+        } else {
+            return res.status(404).json({ message: 'User not found for verification.' });
+        }
+    } else {
+        return res.status(400).json({ message: 'Invalid or expired OTP. Please try registering again.' });
+    }
 });
 
 // Login Endpoint
@@ -166,6 +204,10 @@ app.post('/api/login', async (req, res) => {
 
     if (!user) {
         return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    if (!user.verified) {
+        return res.status(403).json({ message: 'Account not verified. Please check your email for OTP to verify.' });
     }
 
     try {

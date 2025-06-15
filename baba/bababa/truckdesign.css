@@ -41,6 +41,8 @@
         max-width: 1200px;
         margin: 0 auto;
         width: 100%;
+        height: calc(100vh - 64px); /* Adjust based on padding/margin if necessary */
+        overflow-y: auto;
     }
 
     .section {

@@ -9,6 +9,8 @@ let directionsRenderer;
 const DEFAULT_MAP_CENTER = { lat: 14.5995, lng: 120.9842 }; // Manila coordinates
 let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 
+let currentOtpEmail = ''; // To store the email for OTP verification
+
 // Role-based access control
 const ROLE_ACCESS = {
     master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'admin_management'],
@@ -1194,6 +1196,7 @@ function showLogin() {
     document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
+    document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
     const mainContentElement = document.getElementById('mainContent');
     if (mainContentElement) {
         mainContentElement.style.display = 'none';
@@ -1205,6 +1208,20 @@ function showRegister() {
     document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
+    document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
+    const mainContentElement = document.getElementById('mainContent');
+    if (mainContentElement) {
+        mainContentElement.style.display = 'none';
+    }
+    hideLogoutBtn();
+}
+
+function showOtpVerification(email) {
+    document.getElementById('auth').style.display = 'block';
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('otp-verification-form').style.display = 'block';
+    currentOtpEmail = email; // Store the email for verification
     const mainContentElement = document.getElementById('mainContent');
     if (mainContentElement) {
         mainContentElement.style.display = 'none';
@@ -1399,16 +1416,52 @@ async function registerUser() {
             body: JSON.stringify({ username, password, email, company, role, key })
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Registration failed');
+            throw new Error(data.message || 'Registration failed');
         }
 
-        showNotification('Registration successful! Please login.', 'success');
-        showLogin(); // Go back to login form
+        if (data.requiresOtpVerification) {
+            showNotification(data.message, 'success');
+            showOtpVerification(data.email); // Show OTP form and pass email
+        } else {
+            showNotification(data.message, 'success');
+            showLogin(); // Go back to login form if OTP not required (shouldn't happen now)
+        }
 
     } catch (error) {
         handleApiError(error, 'Registration failed');
+    }
+}
+
+async function verifyOtp() {
+    const otpInput = document.getElementById('otpInput').value;
+
+    if (!currentOtpEmail || !otpInput) {
+        showNotification('Email or OTP is missing.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentOtpEmail, otp: otpInput })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'OTP verification failed.');
+        }
+
+        showNotification(data.message, 'success');
+        showLogin(); // Go to login form after successful verification
+        currentOtpEmail = ''; // Clear stored email
+
+    } catch (error) {
+        handleApiError(error, 'OTP verification failed');
     }
 }
 
@@ -1674,6 +1727,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('register-form')?.addEventListener('submit', (event) => {
         event.preventDefault();
         registerUser();
+    });
+    document.getElementById('otp-verification-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        verifyOtp();
     });
 
     // Attach click event listener for logout button
