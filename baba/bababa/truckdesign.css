@@ -14,7 +14,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Prevent scrolling on the main document */
+    overflow-y: auto; /* Allow vertical scrolling */
 }
 
 body {
@@ -40,6 +40,7 @@ body {
     grid-template-columns: 260px 1fr;
     min-height: 100vh;
     gap: 20px;
+    align-items: start; /* Ensure grid items align to the top */
 }
 
 .sidebar {
