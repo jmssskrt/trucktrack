@@ -38,7 +38,7 @@ body {
 .container {
     display: grid;
     grid-template-columns: 260px 1fr;
-    min-height: 100vh;
+    height: 100%; /* Ensure container fills the viewport height */
     gap: 20px;
     align-items: start; /* Ensure grid items align to the top */
 }
