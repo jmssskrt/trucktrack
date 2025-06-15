@@ -529,6 +529,10 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
         const startDate = new Date(year, monthNum - 1, 1);
         const endDate = new Date(year, monthNum, 0);
 
+        console.log(`[Report Debug] Monthly Report Request for month: ${month}`);
+        console.log(`[Report Debug] Calculated Start Date: ${startDate.toISOString()}`);
+        console.log(`[Report Debug] Calculated End Date: ${endDate.toISOString()}`);
+
         const monthlyTrips = filteredTrips.filter(trip => {
             const tripDate = new Date(trip.date);
             return tripDate >= startDate && tripDate <= endDate;
@@ -554,12 +558,15 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
         // Get expenses for the month
         const monthlyExpenses = expenses.filter(expense => {
             const expenseDate = new Date(expense.date);
-            return expenseDate >= startDate && expenseDate <= endDate;
+            const isInRange = expenseDate >= startDate && expenseDate <= endDate;
+            console.log(`[Report Debug] Processing expense: ${expense.date}, Amount: ${expense.amount}, In Range: ${isInRange}`);
+            return isInRange;
         });
 
         monthlyExpenses.forEach(expense => {
             const dateStr = expense.date.split('T')[0];
             dailyData[dateStr].expenses += parseFloat(expense.amount);
+            console.log(`[Report Debug] Added expense amount: ${parseFloat(expense.amount)} to date: ${dateStr}. Current total for date: ${dailyData[dateStr].expenses}`);
         });
 
         const reportData = {
@@ -576,6 +583,7 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
                 expenses: data.expenses
             }))
         };
+        console.log(`[Report Debug] Final totalExpenses: ${reportData.totalExpenses}`);
 
         res.json(reportData);
     } catch (error) {
