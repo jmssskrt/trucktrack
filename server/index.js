@@ -548,23 +548,17 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
             };
         }
 
-        monthlyTrips.forEach(trip => {
-            const dateStr = trip.date.split('T')[0];
-            dailyData[dateStr].trips++;
-            // Add revenue calculation based on your business logic
-            dailyData[dateStr].revenue += trip.revenue || 0;
-        });
-
         // Get expenses for the month
         const monthlyExpenses = expenses.filter(expense => {
+            console.log(`[Report Debug] Raw expense date for filtering: ${expense.date}`);
             const expenseDate = new Date(expense.date);
             const isInRange = expenseDate >= startDate && expenseDate <= endDate;
-            console.log(`[Report Debug] Processing expense: ${expense.date}, Amount: ${expense.amount}, In Range: ${isInRange}`);
+            console.log(`[Report Debug] Processing expense: ${expense.date}, Amount: ${expense.amount}, Is Valid Date: ${!isNaN(expenseDate.getTime())}, In Range: ${isInRange}`);
             return isInRange;
         });
 
         monthlyExpenses.forEach(expense => {
-            const dateStr = expense.date.split('T')[0];
+            const dateStr = new Date(expense.date).toISOString().split('T')[0]; // Ensure valid date for this step
             dailyData[dateStr].expenses += parseFloat(expense.amount);
             console.log(`[Report Debug] Added expense amount: ${parseFloat(expense.amount)} to date: ${dateStr}. Current total for date: ${dailyData[dateStr].expenses}`);
         });
@@ -600,6 +594,10 @@ app.post('/api/reports/weekly', authenticateToken, checkRole(['master_admin', 'a
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + 6);
 
+        console.log(`[Report Debug] Weekly Report Request for week: ${week}`);
+        console.log(`[Report Debug] Calculated Start Date (Weekly): ${startDate.toISOString()}`);
+        console.log(`[Report Debug] Calculated End Date (Weekly): ${endDate.toISOString()}`);
+
         const weeklyTrips = trips.filter(trip => {
             const tripDate = new Date(trip.date);
             return tripDate >= startDate && tripDate <= endDate;
@@ -615,20 +613,18 @@ app.post('/api/reports/weekly', authenticateToken, checkRole(['master_admin', 'a
             };
         }
 
-        weeklyTrips.forEach(trip => {
-            const dateStr = trip.date.split('T')[0];
-            dailyData[dateStr].trips++;
-            dailyData[dateStr].revenue += trip.revenue || 0;
-        });
-
         const weeklyExpenses = expenses.filter(expense => {
+            console.log(`[Report Debug] Raw expense date for weekly filtering: ${expense.date}`);
             const expenseDate = new Date(expense.date);
-            return expenseDate >= startDate && expenseDate <= endDate;
+            const isInRange = expenseDate >= startDate && expenseDate <= endDate;
+            console.log(`[Report Debug] Processing weekly expense: ${expense.date}, Amount: ${expense.amount}, Is Valid Date: ${!isNaN(expenseDate.getTime())}, In Range: ${isInRange}`);
+            return isInRange;
         });
 
         weeklyExpenses.forEach(expense => {
-            const dateStr = expense.date.split('T')[0];
+            const dateStr = new Date(expense.date).toISOString().split('T')[0];
             dailyData[dateStr].expenses += parseFloat(expense.amount);
+            console.log(`[Report Debug] Added weekly expense amount: ${parseFloat(expense.amount)} to date: ${dateStr}. Current total for date: ${dailyData[dateStr].expenses}`);
         });
 
         const reportData = {
