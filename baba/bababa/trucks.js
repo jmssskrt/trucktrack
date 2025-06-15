@@ -74,7 +74,6 @@ function showSection(sectionId) {
     } else if (sectionId === 'customers') {
         updateCustomersTable();
     } else if (sectionId === 'tracking') {
-        initTrackingMap();
         updateActiveTripsList();
     } else if (sectionId === 'reports') {
         // loadReports(); // Removed or replaced. Assuming generateReport() might be called by user action.
@@ -1771,5 +1770,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showLogin();
     }
-    setupRoleKeyInput(); // Ensure the key input is shown for admin/master admin roles on DOMContentLoaded
+
+    // Initialize map after DOM is loaded and scripts are parsed
+    if (typeof initTrackingMap === 'function') {
+        initTrackingMap();
+    } else {
+        console.error("initTrackingMap function not found after DOMContentLoaded. Map will not initialize.");
+    }
 });
