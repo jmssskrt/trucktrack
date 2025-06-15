@@ -1192,7 +1192,7 @@ function logout() {
 }
 
 function showLogin() {
-    document.getElementById('auth').style.display = 'grid';
+    document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1204,7 +1204,7 @@ function showLogin() {
 }
 
 function showRegister() {
-    document.getElementById('auth').style.display = 'grid';
+    document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1216,7 +1216,7 @@ function showRegister() {
 }
 
 function showOtpVerification(email) {
-    document.getElementById('auth').style.display = 'grid';
+    document.getElementById('auth').style.display = 'block';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'block';
@@ -1770,6 +1770,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showLogin();
     }
+
+    setupRoleKeyInput(); // Ensure the key input is shown for admin/master admin roles on DOMContentLoaded
 
     // Initialize map after DOM is loaded and scripts are parsed
     if (typeof initTrackingMap === 'function') {
