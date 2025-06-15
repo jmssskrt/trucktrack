@@ -1763,10 +1763,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initial section display based on authentication status
+    // Initial setup based on authentication state
     if (isLoggedIn()) {
-        showSection('dashboard');
-        showLogoutBtn();
+        hideAuth();
+        // Determine which section to show based on role or default to dashboard
+        const userRole = getUserRole();
+        if (userRole && ROLE_ACCESS[userRole] && ROLE_ACCESS[userRole].length > 0) {
+            showSection(ROLE_ACCESS[userRole][0]); // Show the first allowed section
+        } else {
+            showSection('dashboard'); // Fallback for roles with no specific sections or undefined roles
+        }
     } else {
         showLogin();
     }
