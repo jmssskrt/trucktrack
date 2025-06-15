@@ -38,7 +38,7 @@ body {
 .container {
     display: grid;
     grid-template-columns: 260px 1fr;
-    height: 100%; /* Ensure container fills the viewport height */
+    min-height: 100vh; /* Reverted to min-height for better content flow */
     gap: 20px;
     align-items: start; /* Ensure grid items align to the top */
 }
@@ -60,6 +60,8 @@ body {
 .main-content {
     padding: 32px 24px;
     width: 100%;
+    height: calc(100vh - 64px); /* Re-added for proper main content height */
+    overflow-y: auto; /* Re-added for vertical scrolling within main content */
 }
 
 .section {
