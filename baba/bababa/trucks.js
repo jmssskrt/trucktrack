@@ -1192,7 +1192,7 @@ function logout() {
 }
 
 function showLogin() {
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'block';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1204,7 +1204,7 @@ function showLogin() {
 }
 
 function showRegister() {
-    document.getElementById('auth').style.display = 'block';
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
     document.getElementById('otp-verification-form').style.display = 'none'; // Hide OTP form
@@ -1216,11 +1216,11 @@ function showRegister() {
 }
 
 function showOtpVerification(email) {
-    document.getElementById('auth').style.display = 'block';
+    currentOtpEmail = email;
+    document.getElementById('auth').style.display = 'grid';
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('register-form').style.display = 'none';
     document.getElementById('otp-verification-form').style.display = 'block';
-    currentOtpEmail = email; // Store the email for verification
     const mainContentElement = document.getElementById('mainContent');
     if (mainContentElement) {
         mainContentElement.style.display = 'none';
