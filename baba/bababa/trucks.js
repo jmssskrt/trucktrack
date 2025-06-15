@@ -1678,13 +1678,73 @@ document.getElementById('reportType')?.addEventListener('change', function() {
     if (this.value === 'monthly') {
         monthInput.style.display = 'block';
         weekInput.style.display = 'none';
+
+        // Set default value if empty for monthly
+        if (!monthInput.value) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            monthInput.value = `${year}-${month}`;
+        }
     } else {
         monthInput.style.display = 'none';
         weekInput.style.display = 'block';
+
+        // Set default value if empty for weekly (to current week)
+        if (!weekInput.value) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const weekNum = getWeekNumber(today);
+            weekInput.value = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+        }
     }
 });
 
+// Helper function to get week number (ISO 8601)
+function getWeekNumber(d) {
+    // Copy date so don't modify original
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    // Get first day of year
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    // Calculate full weeks to the nearest Thursday
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Set initial default date for monthly report when page loads
+    const reportTypeSelect = document.getElementById('reportType');
+    const monthInput = document.getElementById('reportMonth');
+    const weekInput = document.getElementById('reportWeek');
+
+    // Ensure initial display state matches default report type (monthly)
+    if (reportTypeSelect && monthInput && weekInput) {
+        if (reportTypeSelect.value === 'monthly') {
+            monthInput.style.display = 'block';
+            weekInput.style.display = 'none';
+            // Set default month if not already set
+            if (!monthInput.value) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                monthInput.value = `${year}-${month}`;
+            }
+        } else { // weekly
+            monthInput.style.display = 'none';
+            weekInput.style.display = 'block';
+            // Set default week if not already set
+            if (!weekInput.value) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const weekNum = getWeekNumber(today);
+                weekInput.value = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+            }
+        }
+    }
+
     // Attach event listeners for navigation buttons
     document.getElementById('dashboardNavBtn')?.addEventListener('click', () => showSection('dashboard'));
     document.getElementById('tripsNavBtn')?.addEventListener('click', () => showSection('trips'));
