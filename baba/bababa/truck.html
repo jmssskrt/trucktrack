@@ -224,13 +224,13 @@
 </head>
 <body>
     <div class="auth-section" id="auth">
-        <div class="auth-card" id="login-form">
+        <form id="login-form" class="auth-card">
             <h2>Login to TruckTrack</h2>
             <input type="text" id="loginUsername" placeholder="Username">
             <input type="password" id="loginPassword" placeholder="Password">
             <button type="submit">Login</button>
             <p class="toggle-link" onclick="showRegister()">Don't have an account? Register</p>
-        </div>
+        </form>
         <form id="register-form" style="display: none;">
             <h2>Register for TruckTrack</h2>
             <input type="text" id="registerUsername" placeholder="Username" required>
@@ -526,5 +526,6 @@
     <button id="logoutBtn" style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; padding: 10px 15px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; display: none;">Logout</button>
     <div id="notification-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000;"></div>
     <script src="trucks.js"></script>
+    <script src="auth.js"></script>
 </body>
 </html>
