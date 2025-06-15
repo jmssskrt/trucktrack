@@ -14,13 +14,16 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow-y: auto; /* Allow vertical scrolling */
+    /* Removed overflow-y: auto to let specific containers handle scrolling */
 }
 
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: #f8fafc;
     color: #1e293b;
+    display: flex; /* Make body a flex container */
+    flex-direction: column; /* Stack children vertically */
+    min-height: 100vh; /* Ensure body takes full viewport height */
 }
 
 .auth-overlay {
