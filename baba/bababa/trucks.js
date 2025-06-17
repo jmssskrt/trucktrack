@@ -13,7 +13,7 @@ let currentOtpEmail = ''; // To store the email for OTP verification
 
 // Role-based access control
 const ROLE_ACCESS = {
-    master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'admin_management'],
+    master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'adminManagement'],
     admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'], // 'reports' added for admin
     user: ['tracking']
 };
@@ -84,7 +84,7 @@ function showSection(sectionId, userRoleFromLogin = null) {
         updateActiveTripsList();
     } else if (sectionId === 'reports') {
         // loadReports(); // Removed or replaced. Assuming generateReport() might be called by user action.
-    } else if (sectionId === 'admin_management') {
+    } else if (sectionId === 'adminManagement') {
         loadAdminManagement();
     }
 }
@@ -1758,7 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('customersNavBtn')?.addEventListener('click', () => showSection('customers'));
     document.getElementById('trackingNavBtn')?.addEventListener('click', () => showSection('tracking'));
     document.getElementById('reportsNavBtn')?.addEventListener('click', () => showSection('reports'));
-    document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('admin_management'));
+    document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('adminManagement'));
 
     // Attach submit event listeners for forms
     document.getElementById('tripForm')?.addEventListener('submit', (event) => {
