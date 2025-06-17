@@ -271,7 +271,7 @@ app.get('/api/trips', authenticateToken, (req, res) => {
     return res.json(trips);
 });
 
-app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
+app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin', 'user']), (req, res) => {
     const { 
         origin, origin_lat, origin_lng,
         destination, destination_lat, destination_lng,
