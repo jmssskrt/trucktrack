@@ -487,6 +487,9 @@ async function addTrip() {
     const distance = document.getElementById('tripDistance')?.value;
     const price = document.getElementById('tripPrice')?.value;
 
+    // Log the price value before sending to server
+    console.log('Add Trip: Price value from input:', price);
+
     if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status) {
         showNotification('Please fill all required trip fields.', 'error');
         return;
