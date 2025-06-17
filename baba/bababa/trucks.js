@@ -1756,6 +1756,20 @@ async function checkFullyBooked(date) {
         if (notif) notif.style.display = 'none';
         if (mark) mark.style.display = 'none';
     }
+
+    const addTripBtn = document.getElementById('addTripBtn');
+    const tripForm = document.getElementById('tripForm');
+    if (fullyBooked) {
+        if (notif) notif.style.display = 'block';
+        if (mark) mark.style.display = 'inline-block';
+        if (addTripBtn) addTripBtn.disabled = true;
+        if (tripForm) Array.from(tripForm.elements).forEach(el => el.disabled = true);
+    } else {
+        if (notif) notif.style.display = 'none';
+        if (mark) mark.style.display = 'none';
+        if (addTripBtn) addTripBtn.disabled = false;
+        if (tripForm) Array.from(tripForm.elements).forEach(el => el.disabled = false);
+    }
 }
 
 // Hook into Trip Management date change
