@@ -1,6 +1,6 @@
     // auth.js
-    const API_BASE_URL = 'http://127.0.0.1:5500/api';
-    const AUTH_API_BASE_URL = 'http://127.0.0.1:5500'; // For login/register without /api prefix
+    const API_BASE_URL = 'https://trucktrack-jl6v.onrender.com/api';
+    const AUTH_API_BASE_URL = 'https://trucktrack-jl6v.onrender.com'; // For login/register without /api prefix
 function showLogin() {
     document.getElementById('loginFormContainer').style.display = '';
     document.getElementById('registerFormContainer').style.display = 'none';
@@ -35,7 +35,7 @@ document.getElementById('loginForm').onsubmit = async (e) => {
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
     try {
-        const res = await fetch('/api/login', {
+        const res = await fetch(`${AUTH_API_BASE_URL}/api/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -57,7 +57,7 @@ document.getElementById('registerForm').onsubmit = async (e) => {
     const username = document.getElementById('registerUsername').value;
     const password = document.getElementById('registerPassword').value;
     try {
-        const res = await fetch('/api/register', {
+        const res = await fetch(`${AUTH_API_BASE_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
