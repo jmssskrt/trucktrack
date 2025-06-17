@@ -93,25 +93,21 @@ function showSection(sectionId, userRoleFromLogin = null) {
 function updateNavigationButtons(role = null) {
     const userRole = role || getUserRole(); // Use passed role or get from token
     console.log('updateNavigationButtons: Current User Role:', userRole);
-    const allowedSections = ROLE_ACCESS[userRole];
+    const allowedSections = ROLE_ACCESS[userRole] || []; // Ensure it's an array even if userRole is null/undefined
     console.log('updateNavigationButtons: Allowed Sections for Role:', allowedSections);
 
     document.querySelectorAll('.nav-button').forEach(button => {
         const sectionId = button.id.replace('NavBtn', '');
-        console.log(`updateNavigationButtons: Processing button: ${sectionId}, is allowed: ${allowedSections ? allowedSections.includes(sectionId) : 'N/A'}`);
+        let shouldShow = false;
 
-        // Always show the logout button
         if (button.id === 'logoutBtn') {
-            button.style.display = 'block';
-        } else if (button.id === 'reportsNavBtn' && (userRole === 'admin' || userRole === 'master_admin')) {
-            button.style.display = 'block';
-        } else if (button.id === 'adminManagementNavBtn' && userRole !== 'master_admin') {
-            button.style.display = 'none';
-        } else if (allowedSections && allowedSections.includes(sectionId)) {
-            button.style.display = 'block';
-        } else {
-            button.style.display = 'none';
+            shouldShow = true; // Always show logout
+        } else if (allowedSections.includes(sectionId)) {
+            shouldShow = true; // Show if explicitly allowed for the role
         }
+
+        button.style.display = shouldShow ? 'block' : 'none';
+        console.log(`updateNavigationButtons: Button: ${sectionId}, Should Show: ${shouldShow}, Actual Display: ${button.style.display}`);
     });
     console.log('updateNavigationButtons: Finished updating buttons.');
 }
@@ -1398,8 +1394,11 @@ async function loginUser() {
             mainContentElement.style.display = 'grid'; // Ensure it uses grid layout
         }
         
-        updateNavigationButtons(data.role); // Pass role directly
-        showSection('dashboard', data.role); // Pass role directly
+        // Defer navigation and section display to ensure DOM is ready
+        setTimeout(() => {
+            updateNavigationButtons(data.role); // Pass role directly
+            showSection('dashboard', data.role); // Pass role directly
+        }, 0); // Small delay to allow DOM to settle
 
     } catch (error) {
         console.error('Login failed:', error);
