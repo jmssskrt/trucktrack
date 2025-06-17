@@ -485,7 +485,9 @@ async function addTrip() {
     const estimated_travel_time = document.getElementById('tripTravelTime')?.value;
     const estimated_arrival_time = document.getElementById('tripETA')?.value;
     const distance = document.getElementById('tripDistance')?.value;
-    const price = document.getElementById('tripPrice')?.value;
+    const priceInput = document.getElementById('tripPrice')?.value;
+    // Clean the price string: remove currency symbol and commas, then parse as float
+    const price = parseFloat(priceInput.replace(/[^0-9.-]+/g," ").replace(' ',''));
 
     // Log the price value before sending to server
     console.log('Add Trip: Price value from input:', price);
