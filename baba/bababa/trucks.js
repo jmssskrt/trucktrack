@@ -40,9 +40,9 @@ function handleApiError(error, message) {
 }
 
 // Navigation functions
-function showSection(sectionId) {
-    const userRole = getUserRole();
-    if (!ROLE_ACCESS[userRole].includes(sectionId)) {
+function showSection(sectionId, userRoleFromLogin = null) {
+    const userRole = userRoleFromLogin || getUserRole(); // Use passed role or get from token
+    if (!ROLE_ACCESS[userRole] || !ROLE_ACCESS[userRole].includes(sectionId)) {
         showNotification('You do not have access to this section.', 'error');
         return;
     }
@@ -90,8 +90,8 @@ function showSection(sectionId) {
 }
 
 // Update navigation buttons based on role
-function updateNavigationButtons() {
-    const userRole = getUserRole();
+function updateNavigationButtons(role = null) {
+    const userRole = role || getUserRole(); // Use passed role or get from token
     console.log('updateNavigationButtons: Current User Role:', userRole);
     const allowedSections = ROLE_ACCESS[userRole];
     console.log('updateNavigationButtons: Allowed Sections for Role:', allowedSections);
@@ -1398,8 +1398,8 @@ async function loginUser() {
             mainContentElement.style.display = 'grid'; // Ensure it uses grid layout
         }
         
-        updateNavigationButtons(); // Update navigation based on new role
-        showSection('dashboard'); // Redirect to dashboard or a default section
+        updateNavigationButtons(data.role); // Pass role directly
+        showSection('dashboard', data.role); // Pass role directly
 
     } catch (error) {
         console.error('Login failed:', error);
