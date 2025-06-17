@@ -543,7 +543,11 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
 
         const monthlyTrips = filteredTrips.filter(trip => {
             const tripDate = new Date(trip.date);
-            return tripDate >= startDate && tripDate <= endDate;
+            const isValidDate = !isNaN(tripDate.getTime()); // Check if date is valid
+            if (!isValidDate) {
+                console.warn(`[Report Debug] Invalid trip date encountered: ${trip.date}`);
+            }
+            return isValidDate && tripDate >= startDate && tripDate <= endDate;
         });
 
         const dailyData = {};
@@ -555,6 +559,22 @@ app.post('/api/reports/monthly', authenticateToken, checkRole(['master_admin', '
                 expenses: 0
             };
         }
+
+        // Populate dailyData with trip counts and revenue
+        monthlyTrips.forEach(trip => {
+            const tripDate = new Date(trip.date);
+            const dateStr = tripDate.toISOString().split('T')[0];
+            if (dailyData[dateStr]) {
+                dailyData[dateStr].trips += 1;
+                // Ensure price is a valid number, default to 0 if not
+                const tripPrice = parseFloat(trip.price);
+                if (!isNaN(tripPrice)) {
+                    dailyData[dateStr].revenue += tripPrice;
+                } else {
+                    console.warn(`[Report Debug] Invalid trip price for trip on ${trip.date}: ${trip.price}`);
+                }
+            }
+        });
 
         // Get expenses for the month
         const monthlyExpenses = expenses.filter(expense => {
@@ -608,7 +628,11 @@ app.post('/api/reports/weekly', authenticateToken, checkRole(['master_admin', 'a
 
         const weeklyTrips = trips.filter(trip => {
             const tripDate = new Date(trip.date);
-            return tripDate >= startDate && tripDate <= endDate;
+            const isValidDate = !isNaN(tripDate.getTime()); // Check if date is valid
+            if (!isValidDate) {
+                console.warn(`[Report Debug] Invalid weekly trip date encountered: ${trip.date}`);
+            }
+            return isValidDate && tripDate >= startDate && tripDate <= endDate;
         });
 
         const dailyData = {};
@@ -620,6 +644,22 @@ app.post('/api/reports/weekly', authenticateToken, checkRole(['master_admin', 'a
                 expenses: 0
             };
         }
+
+        // Populate dailyData with trip counts and revenue for weekly reports
+        weeklyTrips.forEach(trip => {
+            const tripDate = new Date(trip.date);
+            const dateStr = tripDate.toISOString().split('T')[0];
+            if (dailyData[dateStr]) {
+                dailyData[dateStr].trips += 1;
+                // Ensure price is a valid number, default to 0 if not
+                const tripPrice = parseFloat(trip.price);
+                if (!isNaN(tripPrice)) {
+                    dailyData[dateStr].revenue += tripPrice;
+                } else {
+                    console.warn(`[Report Debug] Invalid weekly trip price for trip on ${trip.date}: ${trip.price}`);
+                }
+            }
+        });
 
         const weeklyExpenses = expenses.filter(expense => {
             console.log(`[Report Debug] Raw expense date for weekly filtering: ${expense.date}`);
