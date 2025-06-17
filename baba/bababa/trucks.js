@@ -1727,34 +1727,26 @@ function getWeekNumber(d) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Set initial default date for monthly report when page loads
-    const reportTypeSelect = document.getElementById('reportType');
-    const monthInput = document.getElementById('reportMonth');
-    const weekInput = document.getElementById('reportWeek');
+    const authElement = document.getElementById('auth');
+    const mainContentElement = document.getElementById('mainContent');
 
-    // Ensure initial display state matches default report type (monthly)
-    if (reportTypeSelect && monthInput && weekInput) {
-        if (reportTypeSelect.value === 'monthly') {
-            monthInput.style.display = 'block';
-            weekInput.style.display = 'none';
-            // Set default month if not already set
-            if (!monthInput.value) {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = (today.getMonth() + 1).toString().padStart(2, '0');
-                monthInput.value = `${year}-${month}`;
-            }
-        } else { // weekly
-            monthInput.style.display = 'none';
-            weekInput.style.display = 'block';
-            // Set default week if not already set
-            if (!weekInput.value) {
-                const today = new Date();
-                const year = today.getFullYear();
-                const weekNum = getWeekNumber(today);
-                weekInput.value = `${year}-W${weekNum.toString().padStart(2, '0')}`;
-            }
+    const tokenOnLoad = getToken();
+    console.log('DOMContentLoaded: Token on load:', tokenOnLoad ? 'Present' : 'Not Present');
+
+    if (tokenOnLoad) {
+        const userRoleOnLoad = getUserRole();
+        console.log('DOMContentLoaded: User Role on load:', userRoleOnLoad);
+
+        if (authElement) {
+            authElement.style.display = 'none';
         }
+        if (mainContentElement) {
+            mainContentElement.style.display = 'grid'; // Ensure it uses grid layout
+        }
+        updateNavigationButtons();
+        showSection('dashboard');
+    } else {
+        showLogin(); // Show login if no token
     }
 
     // Attach event listeners for navigation buttons
@@ -1834,20 +1826,6 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateETA(originLatLng, destinationLatLng, tripDate);
         }
     });
-
-    // Initial setup based on authentication state
-    if (isLoggedIn()) {
-        hideAuth();
-        // Determine which section to show based on role or default to dashboard
-        const userRole = getUserRole();
-        if (userRole && ROLE_ACCESS[userRole] && ROLE_ACCESS[userRole].length > 0) {
-            showSection(ROLE_ACCESS[userRole][0]); // Show the first allowed section
-        } else {
-            showSection('dashboard'); // Fallback for roles with no specific sections or undefined roles
-        }
-    } else {
-        showLogin();
-    }
 
     setupRoleKeyInput(); // Ensure the key input is shown for admin/master admin roles on DOMContentLoaded
 
