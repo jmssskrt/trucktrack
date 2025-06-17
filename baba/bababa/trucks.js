@@ -23,9 +23,16 @@ function handleApiError(error, message) {
     console.error(message, error);
     if (error.response) {
         console.error('API Error Response Status:', error.response.status);
-        error.response.text().then(text => console.error('API Error Response Body:', text));
-    }
-    if (error.message.includes('Failed to fetch')) {
+        error.response.text().then(text => {
+            console.error('API Error Response Body:', text);
+            if (error.response.status === 403 || error.response.status === 401) {
+                showNotification('Session expired or unauthorized. Please log in again.', 'error');
+                logout(); // Log out the user if token is invalid or expired
+            } else {
+                showNotification(message + ': ' + text, 'error');
+            }
+        });
+    } else if (error.message.includes('Failed to fetch')) {
         showNotification('Server is not running or unreachable.', 'error');
     } else {
         showNotification(message + ': ' + error.message, 'error');
@@ -111,6 +118,7 @@ function getUserRole() {
     
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('getUserRole: Parsed Role from Token:', payload.role);
         return payload.role;
     } catch (error) {
         console.error('Error parsing token:', error);

@@ -85,9 +85,6 @@ function saveData() {
 // Load data when server starts
 loadData();
 
-// JWT Secret (Use a strong, long, and secret key in production environment variables)
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
-
 // Middleware to parse JSON bodies
 app.use(express.json());
 
@@ -99,15 +96,20 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
+    console.log('Authenticate Token Middleware: Received Token:', token ? 'YES' : 'NO');
+
     if (token == null) {
+        console.log('Authentication Token Middleware: No token provided.');
         return res.status(401).json({ message: 'Authentication token required.' }); // No token
     }
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
+            console.error('Authentication Token Middleware: JWT verification failed:', err.message);
             return res.status(403).json({ message: 'Invalid or expired token.' }); // Invalid token
         }
         req.user = user;
+        console.log('Authentication Token Middleware: Token verified. User:', req.user);
         next();
     });
 }
