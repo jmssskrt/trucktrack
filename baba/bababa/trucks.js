@@ -15,7 +15,7 @@ let currentOtpEmail = ''; // To store the email for OTP verification
 const ROLE_ACCESS = {
     master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'adminManagement'],
     admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'], // 'reports' added for admin
-    user: ['tracking']
+    user: ['trips', 'tracking']
 };
 
 // Error handling function
