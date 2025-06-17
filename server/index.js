@@ -12,6 +12,9 @@ const PORT = process.env.PORT || 5500; // Render will provide a PORT environment
 
 const DATA_FILE = path.join(__dirname, 'data.json'); // Define the path to your data file
 
+// JWT Secret (Use a strong, long, and secret key in production environment variables)
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
+
 // Constants for role keys
 const MASTER_ADMIN_KEY = '000111';
 const ADMIN_KEY = '111000';
