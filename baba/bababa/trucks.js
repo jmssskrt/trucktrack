@@ -1731,6 +1731,51 @@ function getWeekNumber(d) {
     return weekNo;
 }
 
+// --- Fully Booked Notification Logic ---
+async function checkFullyBooked(date) {
+    if (!date) return;
+    const [trips, drivers, vehicles] = await Promise.all([
+        getTrips(),
+        getDrivers(),
+        getVehicles()
+    ]);
+    // Get all trips for the selected date with status Pending or Active
+    const tripsForDate = trips.filter(trip => trip.date === date && (trip.status === 'Pending' || trip.status === 'Active'));
+    const bookedDriverIds = new Set(tripsForDate.map(trip => trip.driver_id));
+    const bookedVehicleIds = new Set(tripsForDate.map(trip => trip.vehicle_id));
+    const allDriversBooked = drivers.length > 0 && drivers.every(driver => bookedDriverIds.has(driver.id));
+    const allVehiclesBooked = vehicles.length > 0 && vehicles.every(vehicle => bookedVehicleIds.has(vehicle.id));
+    const fullyBooked = allDriversBooked && allVehiclesBooked;
+    // Show/hide notification and red mark
+    const notif = document.getElementById('fullyBookedNotif');
+    const mark = document.getElementById('fullyBookedMark');
+    if (fullyBooked) {
+        if (notif) notif.style.display = 'block';
+        if (mark) mark.style.display = 'inline-block';
+    } else {
+        if (notif) notif.style.display = 'none';
+        if (mark) mark.style.display = 'none';
+    }
+}
+
+// Hook into Trip Management date change
+const tripDateInput = document.getElementById('tripDate');
+if (tripDateInput) {
+    tripDateInput.addEventListener('change', () => {
+        checkFullyBooked(tripDateInput.value);
+    });
+}
+// Also check on page load for default date
+if (tripDateInput && tripDateInput.value) {
+    checkFullyBooked(tripDateInput.value);
+}
+
+// Hook into Trip Tracking (assume today's date for tracking)
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    checkFullyBooked(today);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const authElement = document.getElementById('auth');
     const mainContentElement = document.getElementById('mainContent');
