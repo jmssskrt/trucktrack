@@ -297,12 +297,31 @@ app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin', 'u
         estimated_travel_time: estimated_travel_time || 'N/A',
         estimated_arrival_time: estimated_arrival_time || 'N/A',
         distance: distance || 'N/A', // Store distance
-        price: price || 'N/A' // Store price
+        price: price || 'N/A', // Store price
+        createdAt: new Date().toISOString() // Add createdAt timestamp
     };
 
     trips.push(newTrip);
     saveData();
     res.status(201).json(newTrip);
+
+    // Fake booking detection: Cancel pending trips after 5 minutes
+    setInterval(() => {
+        const now = Date.now();
+        let changed = false;
+        trips.forEach(trip => {
+            if (
+                trip.status === 'Pending' &&
+                trip.createdAt &&
+                (now - new Date(trip.createdAt).getTime() > 5 * 60 * 1000)
+            ) {
+                trip.status = 'Canceled';
+                changed = true;
+                console.log(`[Fake Booking Detection] Trip ID ${trip.id} canceled due to no confirmation.`);
+            }
+        });
+        if (changed) saveData();
+    }, 60 * 1000); // Check every minute
 });
 
 app.put('/api/trips/:id', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
