@@ -1398,7 +1398,7 @@ async function loginUser() {
         setTimeout(() => {
             updateNavigationButtons(data.role); // Pass role directly
             showSection('dashboard', data.role); // Pass role directly
-        }, 0); // Small delay to allow DOM to settle
+        }, 50); // Small delay to allow DOM to settle
 
     } catch (error) {
         console.error('Login failed:', error);
