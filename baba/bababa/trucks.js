@@ -92,10 +92,14 @@ function showSection(sectionId) {
 // Update navigation buttons based on role
 function updateNavigationButtons() {
     const userRole = getUserRole();
+    console.log('updateNavigationButtons: Current User Role:', userRole);
     const allowedSections = ROLE_ACCESS[userRole];
-    
+    console.log('updateNavigationButtons: Allowed Sections for Role:', allowedSections);
+
     document.querySelectorAll('.nav-button').forEach(button => {
         const sectionId = button.id.replace('NavBtn', '');
+        console.log(`updateNavigationButtons: Processing button: ${sectionId}, is allowed: ${allowedSections ? allowedSections.includes(sectionId) : 'N/A'}`);
+
         // Always show the logout button
         if (button.id === 'logoutBtn') {
             button.style.display = 'block';
@@ -103,12 +107,13 @@ function updateNavigationButtons() {
             button.style.display = 'block';
         } else if (button.id === 'adminManagementNavBtn' && userRole !== 'master_admin') {
             button.style.display = 'none';
-        } else if (!allowedSections.includes(sectionId)) {
-            button.style.display = 'none';
-        } else {
+        } else if (allowedSections && allowedSections.includes(sectionId)) {
             button.style.display = 'block';
+        } else {
+            button.style.display = 'none';
         }
     });
+    console.log('updateNavigationButtons: Finished updating buttons.');
 }
 
 // Get user role from token
