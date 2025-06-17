@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs'); // Will re-enable hashing later
 const jwt = require('jsonwebtoken'); // Will re-enable JWT later
 
 const app = express();
-const port = 5500;
+const port = process.env.PORT || 5500;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 // Universal Request Logger (MUST be the very first middleware)

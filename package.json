@@ -1,6 +1,14 @@
 {
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "nodemailer": "^7.0.3"
+    "nodemailer": "^7.0.3",
+    "express": "^4.17.1",
+    "sqlite3": "^5.0.0",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^8.5.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "scripts": {
+    "start": "node baba/bababa/server.js"
   }
 }
