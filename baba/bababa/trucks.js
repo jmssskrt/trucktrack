@@ -1744,7 +1744,13 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContentElement.style.display = 'grid'; // Ensure it uses grid layout
         }
         updateNavigationButtons();
-        showSection('dashboard');
+
+        // Determine which section to show based on role or default to dashboard
+        if (userRoleOnLoad === 'user') {
+            showSection('trips'); // Users land on Trip Management
+        } else {
+            showSection('dashboard'); // Admins/Master Admins land on Dashboard
+        }
     } else {
         showLogin(); // Show login if no token
     }
