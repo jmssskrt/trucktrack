@@ -14,8 +14,8 @@ let currentOtpEmail = ''; // To store the email for OTP verification
 // Role-based access control
 const ROLE_ACCESS = {
     master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'adminManagement'],
-    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'], // 'reports' added for admin
-    user: ['trips', 'tracking']
+    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'],
+    user: ['trips', 'tracking', 'customers']
 };
 
 // Error handling function
@@ -1095,31 +1095,41 @@ async function updateCustomersTable() {
     const tableBody = document.querySelector('#customersTable tbody');
     if (!tableBody) return;
     tableBody.innerHTML = '';
+    const role = getUserRole();
+    const canEdit = role === 'admin' || role === 'master_admin';
     customers.forEach(customer => {
         const row = tableBody.insertRow();
-        makeEditable(row.insertCell(), customer.name, async (newValue) => {
-            await updateCustomer(customer.id, { name: newValue });
-            updateCustomersTable();
-            loadCustomers(); // Refresh dropdown
-        });
-        makeEditable(row.insertCell(), customer.email, async (newValue) => {
-            await updateCustomer(customer.id, { email: newValue });
-            updateCustomersTable();
-        });
-        makeEditable(row.insertCell(), customer.phone, async (newValue) => {
-            await updateCustomer(customer.id, { phone: newValue });
-            updateCustomersTable();
-        });
-        makeEditable(row.insertCell(), customer.address, async (newValue) => {
-            await updateCustomer(customer.id, { address: newValue });
-            updateCustomersTable();
-        });
-        const actionsCell = row.insertCell();
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.onclick = () => deleteCustomer(customer.id);
-        actionsCell.appendChild(deleteBtn);
+        if (canEdit) {
+            makeEditable(row.insertCell(), customer.name, async (newValue) => {
+                await updateCustomer(customer.id, { name: newValue });
+                updateCustomersTable();
+                loadCustomers(); // Refresh dropdown
+            });
+            makeEditable(row.insertCell(), customer.email, async (newValue) => {
+                await updateCustomer(customer.id, { email: newValue });
+                updateCustomersTable();
+            });
+            makeEditable(row.insertCell(), customer.phone, async (newValue) => {
+                await updateCustomer(customer.id, { phone: newValue });
+                updateCustomersTable();
+            });
+            makeEditable(row.insertCell(), customer.address, async (newValue) => {
+                await updateCustomer(customer.id, { address: newValue });
+                updateCustomersTable();
+            });
+            const actionsCell = row.insertCell();
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.onclick = () => deleteCustomer(customer.id);
+            actionsCell.appendChild(deleteBtn);
+        } else {
+            row.insertCell().textContent = customer.name;
+            row.insertCell().textContent = customer.email;
+            row.insertCell().textContent = customer.phone;
+            row.insertCell().textContent = customer.address;
+            row.insertCell().textContent = '-'; // No actions for users
+        }
     });
 }
 
