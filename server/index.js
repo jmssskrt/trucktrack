@@ -267,29 +267,8 @@ app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
 
 // Trips API
 app.get('/api/trips', authenticateToken, (req, res) => {
-    // Admins and Master Admins see all trips. Users only see their company's trips.
-    const userRole = req.user.role;
-    if (userRole === 'user') {
-        // For regular users, filter trips by their company_id (driver_id matches their user ID)
-        // This assumes a driver's ID is the user's ID. Adjust if driver_id is separate.
-        const userTrips = trips.filter(trip => {
-            const driver = drivers.find(d => d.id === trip.driver_id);
-            return driver && driver.user_id === req.user.id; // Assuming drivers have a user_id linked to the user table
-        });
-        return res.json(userTrips);
-    } else if (userRole === 'admin') {
-        // Admins see trips related to their company (company_id in trip matches user's company_id)
-        const adminTrips = trips.filter(trip => {
-            const userCompanyId = users.find(u => u.id === req.user.id)?.company;
-            const driverCompanyId = drivers.find(d => d.id === trip.driver_id)?.company;
-            //console.log(`Trip driver company: ${driverCompanyId}, Admin company: ${userCompanyId}`);
-            return driverCompanyId === userCompanyId;
-        });
-        return res.json(adminTrips);
-    } else {
-        // Master Admin sees all trips
-        return res.json(trips);
-    }
+    // All authenticated users can now see all trips.
+    return res.json(trips);
 });
 
 app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin']), (req, res) => {
