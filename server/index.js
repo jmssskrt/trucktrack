@@ -16,8 +16,11 @@ const DATA_FILE = path.join(__dirname, 'data.json'); // Define the path to your 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
 
 // Constants for role keys
-const MASTER_ADMIN_KEY = '000111';
-const ADMIN_KEY = '111000';
+const MASTER_ADMIN_KEY = process.env.MASTER_ADMIN_KEY || '000111';
+const ADMIN_KEY = process.env.ADMIN_KEY || '111000';
+
+console.log('Server Startup: MASTER_ADMIN_KEY from env:', process.env.MASTER_ADMIN_KEY ? 'Set' : 'Not Set');
+console.log('Server Startup: Using MASTER_ADMIN_KEY:', MASTER_ADMIN_KEY);
 
 // Email configuration
 const transporter = nodemailer.createTransport({
