@@ -1745,7 +1745,7 @@ async function checkFullyBooked(date) {
     const bookedVehicleIds = new Set(tripsForDate.map(trip => trip.vehicle_id));
     const allDriversBooked = drivers.length > 0 && drivers.every(driver => bookedDriverIds.has(driver.id));
     const allVehiclesBooked = vehicles.length > 0 && vehicles.every(vehicle => bookedVehicleIds.has(vehicle.id));
-    const fullyBooked = allDriversBooked && allVehiclesBooked;
+    const fullyBooked = allDriversBooked || allVehiclesBooked; // Show if either is fully booked
     // Show/hide notification and red mark
     const notif = document.getElementById('fullyBookedNotif');
     const mark = document.getElementById('fullyBookedMark');
