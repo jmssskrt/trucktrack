@@ -1762,18 +1762,22 @@ async function checkFullyBooked(date) {
 const tripDateInput = document.getElementById('tripDate');
 if (tripDateInput) {
     tripDateInput.addEventListener('change', () => {
-        checkFullyBooked(tripDateInput.value);
+        if (isLoggedIn()) {
+            checkFullyBooked(tripDateInput.value);
+        }
     });
 }
 // Also check on page load for default date
-if (tripDateInput && tripDateInput.value) {
+if (tripDateInput && tripDateInput.value && isLoggedIn()) {
     checkFullyBooked(tripDateInput.value);
 }
 
 // Hook into Trip Tracking (assume today's date for tracking)
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
-    checkFullyBooked(today);
+    if (isLoggedIn()) {
+        checkFullyBooked(today);
+    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
