@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TruckTrack - Login/Register</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // Load Google Maps API
+        function loadGoogleMaps() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initGoogleMaps`;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+
+        // Initialize Google Maps
+        function initGoogleMaps() {
+            if (typeof google === 'undefined') {
+                console.error('Google Maps API not loaded');
+                return;
+            }
+            
+            // Initialize any map-related components here
+        }
+
+        // Add error handling
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('Error:', msg);
+            if (msg.includes('Failed to load resource')) {
+                showNotification('Failed to load Google Maps API. Please check your internet connection.', 'error');
+            }
+        };
+    </script>
     <style>
         body {
             background: #f0f4f8;

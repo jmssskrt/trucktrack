@@ -9,6 +9,44 @@ let directionsRenderer;
 const DEFAULT_MAP_CENTER = { lat: 14.5995, lng: 120.9842 }; // Manila coordinates
 let mapSelectionPurpose = null; // To store 'origin' or 'destination'
 
+// Initialize Google Maps
+function initGoogleMaps() {
+    if (typeof google === 'undefined') {
+        console.error('Google Maps API not loaded');
+        return;
+    }
+    
+    trackingMap = new google.maps.Map(document.getElementById('trackingMap'), {
+        center: DEFAULT_MAP_CENTER,
+        zoom: 12
+    });
+
+    geocoder = new google.maps.Geocoder();
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: trackingMap,
+        suppressMarkers: true
+    });
+
+    trackingMarker = new google.maps.Marker({
+        map: trackingMap,
+        draggable: true
+    });
+
+    // Add event listener for marker drag
+    trackingMarker.addListener('dragend', () => {
+        placeTrackingMarkerAndGeocode(trackingMarker.getPosition());
+    });
+}
+
+// Add error handling for Google Maps
+function loadGoogleMaps() {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initGoogleMaps`;
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
 let currentOtpEmail = ''; // To store the email for OTP verification
 
 // Role-based access control
@@ -956,21 +994,26 @@ async function addVehicle() {
         loadVehicles(); // Refresh vehicle dropdown in trip management
     } catch (error) {
         handleApiError(error, 'Error adding vehicle');
+        throw error;
     }
 }
 
 async function getVehicles() {
     try {
+        const token = getToken();
+        if (!token) throw new Error('No authentication token found');
+        
         const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
-            headers: { 'Authorization': `Bearer ${getToken()}` }
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
-        if (!response.ok) {
-            throw new Error('Failed to fetch vehicles');
-        }
+        
+        if (!response.ok) throw new Error('Failed to fetch vehicles');
         return await response.json();
     } catch (error) {
         handleApiError(error, 'Error fetching vehicles');
-        return [];
+        throw error;
     }
 }
 
