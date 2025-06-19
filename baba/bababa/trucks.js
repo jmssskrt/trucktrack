@@ -488,11 +488,12 @@ async function addTrip() {
     const priceInput = document.getElementById('tripPrice')?.value;
     // Clean the price string: remove currency symbol and commas, then parse as float
     const price = parseFloat(priceInput.replace(/[^0-9.-]+/g," ").replace(' ',''));
+    const delivery_requirement = document.getElementById('tripDeliveryRequirement')?.value;
 
     // Log the price value before sending to server
     console.log('Add Trip: Price value from input:', price);
 
-    if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status) {
+    if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status || !delivery_requirement) {
         showNotification('Please fill all required trip fields.', 'error');
         return;
     }
@@ -508,7 +509,8 @@ async function addTrip() {
                 origin, origin_lat, origin_lng, 
                 destination, destination_lat, destination_lng, 
                 date, driver_id, customer_id, vehicle_id, status,
-                estimated_travel_time, estimated_arrival_time, distance, price
+                estimated_travel_time, estimated_arrival_time, distance, price,
+                delivery_requirement
             })
         });
 
@@ -620,6 +622,10 @@ async function updateTripsTable() {
         });
         makeEditable(row.insertCell(), trip.price || 'N/A', async (newValue) => {
             await updateTrip(trip.id, { price: newValue });
+            updateTripsTable();
+        });
+        makeEditable(row.insertCell(), trip.delivery_requirement || 'N/A', async (newValue) => {
+            await updateTrip(trip.id, { delivery_requirement: newValue });
             updateTripsTable();
         });
 

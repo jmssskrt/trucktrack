@@ -276,11 +276,12 @@ app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin', 'u
         origin, origin_lat, origin_lng,
         destination, destination_lat, destination_lng,
         date, driver_id, customer_id, vehicle_id, status,
-        estimated_travel_time, estimated_arrival_time, distance, price // Add distance and price
+        estimated_travel_time, estimated_arrival_time, distance, price,
+        delivery_requirement
     } = req.body;
 
     // Basic validation
-    if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status) {
+    if (!origin || !destination || !date || !driver_id || !customer_id || !vehicle_id || !status || !delivery_requirement) {
         return res.status(400).json({ message: 'Please provide all required trip details.' });
     }
 
@@ -298,6 +299,7 @@ app.post('/api/trips', authenticateToken, checkRole(['master_admin', 'admin', 'u
         estimated_arrival_time: estimated_arrival_time || 'N/A',
         distance: distance || 'N/A', // Store distance
         price: price || 'N/A', // Store price
+        delivery_requirement,
         createdAt: new Date().toISOString() // Add createdAt timestamp
     };
 
@@ -351,7 +353,8 @@ app.put('/api/trips/:id', authenticateToken, checkRole(['master_admin', 'admin']
         origin, origin_lat, origin_lng,
         destination, destination_lat, destination_lng,
         date, driver_id, customer_id, vehicle_id, status,
-        estimated_travel_time, estimated_arrival_time, distance, price // Add distance and price
+        estimated_travel_time, estimated_arrival_time, distance, price,
+        delivery_requirement
     } = req.body;
 
     // Only update if the field is provided in the request body
@@ -370,6 +373,7 @@ app.put('/api/trips/:id', authenticateToken, checkRole(['master_admin', 'admin']
     if (estimated_arrival_time !== undefined) trips[tripIndex].estimated_arrival_time = estimated_arrival_time;
     if (distance !== undefined) trips[tripIndex].distance = distance; // Update distance
     if (price !== undefined) trips[tripIndex].price = price; // Update price
+    if (delivery_requirement !== undefined) trips[tripIndex].delivery_requirement = delivery_requirement; // Update delivery requirement
 
     saveData();
     res.json(trips[tripIndex]);
