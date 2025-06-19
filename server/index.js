@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken'); // For authentication tokens
 const fs = require('fs'); // Add fs module for file system operations
 const nodemailer = require('nodemailer'); // Add this at the top with other requires
 const crypto = require('crypto');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 5500; // Render will provide a PORT environment variable
@@ -55,6 +56,25 @@ let customers = [];
 let vehicles = [];
 let expenses = [];
 let otpStore = new Map(); // Store OTPs temporarily
+
+// Set up storage for proof uploads
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR);
+}
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, UPLOADS_DIR);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage });
+
+// In-memory store for proofs (replace with persistent storage as needed)
+let proofs = [];
 
 // Function to load data from file
 function loadData() {
@@ -728,6 +748,29 @@ app.delete('/api/admin/users/:id', authenticateToken, checkRole(['master_admin']
         }
     });
     res.json({ message: 'Admin removed successfully' });
+});
+
+// Upload proof of delivery
+app.post('/api/proofs', authenticateToken, upload.single('file'), (req, res) => {
+    const { tripId, notes } = req.body;
+    if (!tripId || !req.file) {
+        return res.status(400).json({ message: 'Trip and file are required.' });
+    }
+    const proof = {
+        id: proofs.length ? Math.max(...proofs.map(p => p.id)) + 1 : 1,
+        tripId: parseInt(tripId),
+        userId: req.user.id,
+        file: req.file.filename,
+        notes: notes || '',
+        uploadedAt: new Date().toISOString()
+    };
+    proofs.push(proof);
+    res.status(201).json(proof);
+});
+
+// List all proofs (for demo)
+app.get('/api/proofs', authenticateToken, (req, res) => {
+    res.json(proofs);
 });
 
 // Catch-all for undefined API routes (should come before static file serving and main HTML fallback)
