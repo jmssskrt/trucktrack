@@ -1976,18 +1976,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Proof of Delivery logic
 async function loadProofTrips() {
-    // Fetch trips for the current driver that are completed
     const trips = await getTrips();
+    const userId = getUserIdFromToken();
     const select = document.getElementById('proofTripSelect');
     if (!select) return;
-    select.innerHTML = '<option value="">Select Completed Trip</option>';
-    // For now, show all completed trips (filter by driver if needed)
-    trips.filter(trip => trip.status === 'Completed').forEach(trip => {
+    select.innerHTML = '<option value="">Select Active Trip</option>';
+    // Show only active trips for the current driver
+    const activeTrips = trips.filter(trip => trip.status === 'Active' && String(trip.driver_id) === String(userId));
+    activeTrips.forEach(trip => {
         const option = document.createElement('option');
         option.value = trip.id;
         option.textContent = `${trip.origin} to ${trip.destination} (${trip.date})`;
         select.appendChild(option);
     });
+    // Listen for selection and mark as completed
+    select.onchange = async function() {
+        const tripId = this.value;
+        if (!tripId) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/trips/${tripId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({ status: 'Completed' })
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to mark trip as completed');
+            }
+            showNotification('Trip marked as completed. You can now submit proof of delivery.', 'success');
+            // Refresh dropdown to remove the trip from active list
+            await loadProofTrips();
+            // Optionally, refresh proof list to show in completed
+            updateProofList();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    };
 }
 
 async function updateProofList() {
