@@ -13,9 +13,9 @@ let currentOtpEmail = ''; // To store the email for OTP verification
 
 // Role-based access control
 const ROLE_ACCESS = {
-    master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'adminManagement'],
-    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports'],
-    user: ['trips', 'tracking', 'customers']
+    master_admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'adminManagement', 'proof'],
+    admin: ['dashboard', 'trips', 'expenses', 'drivers', 'vehicles', 'customers', 'tracking', 'reports', 'proof'],
+    user: ['trips', 'tracking', 'customers', 'proof']
 };
 
 // Error handling function
@@ -86,6 +86,9 @@ function showSection(sectionId, userRoleFromLogin = null) {
         // loadReports(); // Removed or replaced. Assuming generateReport() might be called by user action.
     } else if (sectionId === 'adminManagement') {
         loadAdminManagement();
+    } else if (sectionId === 'proof') {
+        loadProofTrips();
+        updateProofList();
     }
 }
 
@@ -1849,6 +1852,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('trackingNavBtn')?.addEventListener('click', () => showSection('tracking'));
     document.getElementById('reportsNavBtn')?.addEventListener('click', () => showSection('reports'));
     document.getElementById('adminManagementNavBtn')?.addEventListener('click', () => showSection('adminManagement'));
+    document.getElementById('proofNavBtn')?.addEventListener('click', () => showSection('proof'));
 
     // Attach submit event listeners for forms
     document.getElementById('tripForm')?.addEventListener('submit', (event) => {
@@ -1926,3 +1930,105 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("initTrackingMap function not found after DOMContentLoaded. Map will not initialize.");
     }
 });
+
+// Proof of Delivery logic
+async function loadProofTrips() {
+    // Fetch trips for the current driver that are completed
+    const trips = await getTrips();
+    const select = document.getElementById('proofTripSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select Completed Trip</option>';
+    // For now, show all completed trips (filter by driver if needed)
+    trips.filter(trip => trip.status === 'Completed').forEach(trip => {
+        const option = document.createElement('option');
+        option.value = trip.id;
+        option.textContent = `${trip.origin} to ${trip.destination} (${trip.date})`;
+        select.appendChild(option);
+    });
+}
+
+async function updateProofList() {
+    const proofList = document.getElementById('proofList');
+    if (!proofList) return;
+    try {
+        // Get all completed trips for the current driver
+        const trips = await getTrips();
+        const userId = getUserIdFromToken();
+        const completedTrips = trips.filter(trip => trip.status === 'Completed' && String(trip.driver_id) === String(userId));
+        // Get all proofs
+        const response = await fetch(`${API_BASE_URL}/api/proofs`, {
+            headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch proofs');
+        const proofs = await response.json();
+        if (!completedTrips.length) {
+            proofList.innerHTML = '<p>No completed trips found for you.</p>';
+            return;
+        }
+        proofList.innerHTML = completedTrips.map(trip => {
+            const proof = proofs.find(p => String(p.tripId) === String(trip.id) && String(p.userId) === String(userId));
+            return `<div class="proof-trip-item" style="border:1px solid #eee; border-radius:8px; padding:12px; margin-bottom:16px;">
+                <strong>${trip.origin} → ${trip.destination}</strong> (${trip.date})<br>
+                <span>Trip ID: ${trip.id}</span><br>
+                ${proof ?
+                    `<span style='color:green;font-weight:bold;'>Delivered</span><br>
+                    <img src="/server/uploads/${proof.file}" alt="Proof" style="max-width:200px;display:block;margin:8px 0;" />
+                    ${proof.notes ? `<div><strong>Notes:</strong> ${proof.notes}</div>` : ''}`
+                    :
+                    `<form class="proof-upload-form" data-trip-id="${trip.id}" enctype="multipart/form-data">
+                        <input type="file" name="file" accept="image/*" required>
+                        <input type="text" name="notes" placeholder="Notes (optional)">
+                        <button type="submit">Upload Proof</button>
+                    </form>`
+                }
+            </div>`;
+        }).join('');
+        // Attach event listeners to all upload forms
+        document.querySelectorAll('.proof-upload-form').forEach(form => {
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const tripId = this.getAttribute('data-trip-id');
+                const fileInput = this.querySelector('input[type="file"]');
+                const notesInput = this.querySelector('input[name="notes"]');
+                if (!fileInput.files.length) {
+                    showNotification('Please select a file.', 'error');
+                    return;
+                }
+                const formData = new FormData();
+                formData.append('tripId', tripId);
+                formData.append('file', fileInput.files[0]);
+                formData.append('notes', notesInput.value);
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/proofs`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`
+                        },
+                        body: formData
+                    });
+                    if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.message || 'Failed to upload proof');
+                    }
+                    showNotification('Proof of delivery submitted successfully!', 'success');
+                    updateProofList();
+                } catch (error) {
+                    showNotification(error.message, 'error');
+                }
+            });
+        });
+    } catch (error) {
+        proofList.innerHTML = `<p style="color:red;">${error.message}</p>`;
+    }
+}
+
+function getUserIdFromToken() {
+    const token = getToken();
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+    } catch (e) {
+        return null;
+    }
+}

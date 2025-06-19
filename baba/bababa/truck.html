@@ -56,6 +56,7 @@
             <button class="nav-button" id="vehiclesNavBtn" style="display: none;">Vehicle Management</button>
             <button class="nav-button" id="customersNavBtn" style="display: none;">Customer Management</button>
             <button class="nav-button" id="trackingNavBtn" style="display: none;">Trip Tracking</button>
+            <button class="nav-button" id="proofNavBtn" style="display: block;">Proof of Delivery</button>
             <button class="nav-button" id="reportsNavBtn" style="display: none;">Reports</button>
             <button class="nav-button" id="adminManagementNavBtn" style="display: none;">Admin Management</button>
             <button class="nav-button" id="logoutBtn" style="margin-top: auto; background-color: #e74c3c;">Logout</button>
@@ -274,6 +275,22 @@
                             <button class="btn-secondary">View All Trips</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Proof of Delivery Section -->
+            <div id="proof" class="section" style="display: none;">
+                <h2>Proof of Delivery</h2>
+                <form id="proofForm">
+                    <select id="proofTripSelect" required>
+                        <option value="">Select Completed Trip</option>
+                    </select>
+                    <input type="file" id="proofFile" accept="image/*" required>
+                    <textarea id="proofNotes" placeholder="Notes (optional)"></textarea>
+                    <button type="submit" class="btn-primary">Submit Proof</button>
+                </form>
+                <div id="proofList">
+                    <!-- Submitted proofs will be listed here -->
                 </div>
             </div>
 
